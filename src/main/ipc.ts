@@ -4,7 +4,10 @@ import { chat } from '@core/ai'
 import { generateContent } from '@core/contentGen'
 import { contentRepo, linkRepo, projectRepo, siteRepo, taskRepo } from './repo'
 import { aiGateways, aiTimeoutMs, getBravePath, getSettings, profileDir, saveSettings } from './config'
-import { closePostingBrowser, currentPostingUrl, isPostingBrowserRunning, openForPosting, openProfileForLogin } from './browser'
+import { closePostingBrowser, currentPostingUrl, isPostingBrowserRunning, openProfileForLogin } from './browser'
+import { markPosted, openTask, requireBrave, undoPosted } from './tasks'
+import { nextInSession, onTaskPostedManually, sessionStatus, startSession, stopSession } from './session'
+import { exportContentPdf } from './pdf'
 import { checkLinks, checkSites } from './checker'
 
 type Handler<C extends Channel> = (...args: Api[C][0]) => Promise<Api[C][1]> | Api[C][1]
@@ -18,19 +21,6 @@ function handle<C extends Channel>(channel: C, fn: Handler<C>) {
       return { ok: false, error: err instanceof Error ? err.message : String(err) }
     }
   })
-}
-
-function requireBrave(): string {
-  const p = getBravePath()
-  if (!p) throw new Error('Brave was not found. Install Brave or set its path in Settings.')
-  return p
-}
-
-function stripMarkdown(md: string): string {
-  return md
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1 ($2)')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
 }
 
 export function registerIpc(getWindow: () => BrowserWindow | null) {
@@ -86,6 +76,13 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
   })
   handle('content:save', (c) => contentRepo.update(c))
   handle('content:delete', (id) => void contentRepo.delete(id))
+  handle('content:exportPdf', async ({ contentId, bodyHtml, includeImages }) => {
+    const content = contentRepo.get(contentId)
+    if (!content) throw new Error('Content not found')
+    const project = projectRepo.get(content.projectId)
+    if (!project) throw new Error('Project not found')
+    return exportContentPdf(getWindow(), content, project, bodyHtml, includeImages)
+  })
 
   // tasks
   handle('tasks:list', (projectId) => taskRepo.list(projectId))
@@ -98,69 +95,22 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
   handle('tasks:update', (t) => taskRepo.update(t))
   handle('tasks:delete', (id) => void taskRepo.delete(id))
   handle('tasks:open', async (taskId): Promise<OpenResult> => {
-    const task = taskRepo.get(taskId)
-    if (!task) throw new Error('Task not found')
-    const site = siteRepo.get(task.siteId)
-    if (!site) throw new Error('Site not found')
-    const content = (task.contentId ? contentRepo.get(task.contentId) : undefined) ?? contentRepo.latestFor(task.projectId, task.siteId)
-    if (content && task.contentId !== content.id) taskRepo.update({ id: task.id, contentId: content.id })
-
-    let copied = false
-    if (content) {
-      clipboard.writeText(content.body)
-      copied = true
-    }
-    const project = projectRepo.get(task.projectId)
-    const filled = await openForPosting({
-      logo: project?.logoPath || '',
-      images: project?.images ?? [],
-      bravePath: requireBrave(),
-      profileDir: profileDir(),
-      url: site.submitUrl || site.url,
-      // No AI content yet: fall back to the brand profile (fits directory/listing forms).
-      title: content?.title ?? project?.name ?? '',
-      body: content
-        ? site.format === 'markdown' || site.format === 'html'
-          ? content.body
-          : stripMarkdown(content.body)
-        : project?.shortDescription || project?.tagline || ''
-    })
-    taskRepo.update({ id: task.id, status: task.status === 'queued' ? 'opened' : task.status })
-    const parts = [
-      filled.title ? 'title filled' : 'title not detected',
-      filled.body ? 'body filled' : 'body not detected',
-      ...(filled.files ? [`${filled.files} image field(s) attached`] : []),
-      copied ? 'body copied to clipboard' : 'no AI content yet, used the project name and short description'
-    ]
-    return {
-      filled,
-      copiedToClipboard: copied,
-      message: `${parts.join(', ')}. Review in Brave, sign in or solve any CAPTCHA yourself, then submit manually.`
-    }
+    const { page: _page, ...result } = await openTask(taskId)
+    return result
   })
   handle('tasks:readCurrentUrl', () => currentPostingUrl())
   handle('tasks:markPosted', ({ taskId, postUrl }) => {
-    const task = taskRepo.get(taskId)
-    if (!task) throw new Error('Task not found')
-    try {
-      new URL(postUrl)
-    } catch {
-      throw new Error('Enter a valid post URL (https://...)')
-    }
-    const content = task.contentId ? contentRepo.get(task.contentId) : undefined
-    const project = projectRepo.get(task.projectId)!
-    const updated = taskRepo.update({ id: taskId, status: 'posted', postUrl, postedAt: new Date().toISOString() })
-    if (content) contentRepo.update({ id: content.id, status: 'used' })
-    const link = linkRepo.insert({
-      projectId: task.projectId,
-      siteId: task.siteId,
-      taskId,
-      pageUrl: postUrl,
-      targetUrl: content?.linkUrl || project.targets[0]?.url || `https://${project.domain}`,
-      expectedAnchor: content?.anchor || ''
-    })
-    return { task: updated, link }
+    const res = markPosted(taskId, postUrl)
+    onTaskPostedManually(taskId)
+    return res
   })
+  handle('tasks:undoPosted', ({ taskId, linkId }) => undoPosted(taskId, linkId))
+
+  // posting session
+  handle('session:start', (projectId) => startSession(projectId))
+  handle('session:next', () => nextInSession())
+  handle('session:stop', () => stopSession())
+  handle('session:status', () => sessionStatus())
 
   // links
   handle('links:list', (projectId) => linkRepo.list(projectId))

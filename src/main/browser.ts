@@ -166,7 +166,7 @@ export interface OpenForPostingInput {
   images: string[]
 }
 
-export async function openForPosting(input: OpenForPostingInput): Promise<{ title: boolean; body: boolean; files: number }> {
+export async function openForPosting(input: OpenForPostingInput): Promise<{ title: boolean; body: boolean; files: number; page: Page }> {
   const ctx = await ensurePostingContext(input.bravePath, input.profileDir)
   const blank = ctx.pages().find((p) => p.url() === 'about:blank')
   const page = blank ?? (await ctx.newPage())
@@ -180,7 +180,7 @@ export async function openForPosting(input: OpenForPostingInput): Promise<{ titl
   const bodyMark = input.body ? await tryFill(frames, BODY_SELECTORS, input.body, page, titleMark ?? undefined) : null
   const files = await attachImages(frames, input.logo, input.images)
   // Leave the page as is: the user reviews, signs in / solves CAPTCHA if needed, and submits.
-  return { title: titleMark !== null, body: bodyMark !== null, files }
+  return { title: titleMark !== null, body: bodyMark !== null, files, page }
 }
 
 /**
@@ -220,6 +220,11 @@ async function attachImages(frames: Frame[], logo: string, images: string[]): Pr
     }
   }
   return attached
+}
+
+/** The automated posting browser context, if open. */
+export function postingContext(): BrowserContext | null {
+  return postingCtx
 }
 
 /** URL of the most recently used tab in the posting browser. */

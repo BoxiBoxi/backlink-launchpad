@@ -148,6 +148,23 @@ export interface SiteCheckResult {
   error?: string
 }
 
+export interface SessionStatus {
+  active: boolean
+  projectId: number | null
+  currentTaskId: number | null
+  currentSiteName: string
+  /** 1-based position of the current task in the session */
+  position: number
+  total: number
+  posted: number
+  message: string
+}
+
+/** Events pushed from the main process to the renderer. */
+export type AppEvent =
+  | { type: 'session'; status: SessionStatus }
+  | { type: 'autoPosted'; taskId: number; linkId: number; siteName: string; url: string }
+
 /** Every IPC call the renderer can make: channel -> [args, result]. */
 export interface Api {
   'sites:list': [[], Site[]]
@@ -166,6 +183,8 @@ export interface Api {
   'content:generate': [[{ projectId: number; siteId: number; linkUrl?: string; anchor?: string; extra?: string }], Content]
   'content:save': [[Pick<Content, 'id' | 'title' | 'body' | 'tags' | 'linkUrl' | 'anchor' | 'status'>], Content]
   'content:delete': [[number], void]
+  /** bodyHtml: sanitized HTML of the body (rendered by the renderer). Returns the saved path, or null if cancelled. */
+  'content:exportPdf': [[{ contentId: number; bodyHtml: string; includeImages: boolean }], string | null]
 
   'tasks:list': [[number | null], Task[]]
   'tasks:create': [[{ projectId: number; siteIds: number[] }], Task[]]
@@ -174,6 +193,12 @@ export interface Api {
   'tasks:open': [[number], OpenResult]
   'tasks:readCurrentUrl': [[], string | null]
   'tasks:markPosted': [[{ taskId: number; postUrl: string }], { task: Task; link: PlacedLink }]
+  'tasks:undoPosted': [[{ taskId: number; linkId: number }], Task]
+
+  'session:start': [[number], SessionStatus]
+  'session:next': [[], SessionStatus]
+  'session:stop': [[], SessionStatus]
+  'session:status': [[], SessionStatus]
 
   'links:list': [[number | null], PlacedLink[]]
   'links:add': [[{ projectId: number; siteId: number | null; pageUrl: string; targetUrl: string; expectedAnchor: string }], PlacedLink]

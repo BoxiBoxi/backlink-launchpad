@@ -31,20 +31,25 @@ export function useQuery<C extends Channel>(channel: C, ...args: Api[C][0]) {
 }
 
 // ---------- toasts ----------
+export interface ToastAction {
+  label: string
+  onClick: () => void
+}
 interface Toast {
   id: number
   kind: 'ok' | 'error' | 'info'
   text: string
+  action?: ToastAction
 }
-const ToastCtx = createContext<(kind: Toast['kind'], text: string) => void>(() => undefined)
+const ToastCtx = createContext<(kind: Toast['kind'], text: string, action?: ToastAction) => void>(() => undefined)
 export const useToast = () => useContext(ToastCtx)
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
-  const push = useCallback((kind: Toast['kind'], text: string) => {
+  const push = useCallback((kind: Toast['kind'], text: string, action?: ToastAction) => {
     const id = Date.now() + Math.random()
-    setToasts((t) => [...t, { id, kind, text }])
-    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), kind === 'error' ? 9000 : 5000)
+    setToasts((t) => [...t, { id, kind, text, action }])
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), action ? 15000 : kind === 'error' ? 9000 : 5000)
   }, [])
   return (
     <ToastCtx.Provider value={push}>
@@ -62,6 +67,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             }`}
           >
             {t.text}
+            {t.action && (
+              <button
+                onClick={() => {
+                  t.action!.onClick()
+                  setToasts((all) => all.filter((x) => x.id !== t.id))
+                }}
+                className="ml-3 rounded-md border border-white/30 px-2 py-0.5 text-xs font-semibold hover:bg-white/10"
+              >
+                {t.action.label}
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -106,3 +122,13 @@ export const splitList = (s: string) =>
 
 /** URL for a local image file (served by the main process). */
 export const localImage = (path: string) => `bb-file://img?p=${encodeURIComponent(path)}`
+
+/** Ask pages to reload their data (fired after background changes such as an auto-detected post). */
+export const REFRESH_EVENT = 'bb:refresh'
+export const requestRefresh = () => window.dispatchEvent(new Event(REFRESH_EVENT))
+export function useRefresh(fn: () => void) {
+  useEffect(() => {
+    window.addEventListener(REFRESH_EVENT, fn)
+    return () => window.removeEventListener(REFRESH_EVENT, fn)
+  }, [fn])
+}

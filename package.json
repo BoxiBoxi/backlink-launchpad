@@ -12,7 +12,8 @@
     "build:app": "electron-vite build",
     "build": "electron-vite build && electron-builder --win --x64",
     "build:dir": "electron-vite build && electron-builder --win --x64 --dir",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "test": "esbuild scripts/test-postDetect.ts --bundle --platform=node --outfile=out/test/postDetect.cjs --log-level=warning && node out/test/postDetect.cjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -37,6 +38,7 @@
     "electron": "^45.4.1",
     "electron-builder": "^26.18.0",
     "electron-vite": "^6.0.0",
+    "esbuild": "^0.28.2",
     "lucide-react": "^1.78.0",
     "marked": "^18.2.1",
     "react": "^19.3.1",

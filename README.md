@@ -12,8 +12,8 @@ never solves CAPTCHAs and never creates accounts.
 | Dashboard | Placed / live / dofollow links and pending tasks per project |
 | Projects | Brand profile: name, domain, tagline, short/long description, logo, screenshots/mockups, topics, target URLs with anchor texts. Logo and screenshots are attached to image upload fields when a task is opened |
 | Site catalog | 414 seeded targets (AI/SaaS directories, launch sites, UGC blogs, communities, forums, Q&A, profiles, 45 Vietnamese sites), each with a priority score 0-100 (relevance + authority + cost/effort + likely link value). Sorted by priority; filter by type, language, priority tier. Most submit URLs are unverified (`review` badge). Editable; "Check alive" probes each site |
-| AI content | One unique post per (project, site), respecting the site's language, type, length, format and link rules. Editable |
-| Posting queue | Opens Brave on the submit page, fills title/body when detected, copies the body to the clipboard. "Posted" stores the live URL (paste it or read it from the active Brave tab) |
+| AI content | One unique post per (project, site), respecting the site's language, type, length, format and link rules. Editable. Editor follows the site format (HTML: WYSIWYG + source + preview; Markdown/plain: write + preview). **Export PDF** (optionally with screenshots) for document sites such as Yumpu, Issuu, Scribd |
+| Posting queue | **Open** a task: Brave goes to the submit page, fills title/body, attaches logo/screenshots, copies the body. **Start session** walks the open tasks by priority: after you submit, it detects the live post URL in Brave (`src/core/postDetect.ts`), saves it to the Link monitor (with Undo) and opens the next site. You still review, sign in, solve CAPTCHAs and click submit. Directories that only show a "pending review" page are not detected: use **Posted** or **Next site** |
 | Link monitor | Checks each placed link: page live, link present, `rel` (dofollow / nofollow / ugc / sponsored), anchor text. Re-checks automatically (interval in Settings) |
 
 Link type in the catalog stays `unknown` until a placed link on that site is verified; the first verified link sets it.
@@ -74,6 +74,7 @@ projects, links and Brave logins.
 ```powershell
 pnpm dev         # Electron + Vite dev mode
 pnpm typecheck   # tsc --noEmit for main/preload/core and renderer
+pnpm test        # post URL detection table test
 pnpm build       # build + Windows NSIS installer in release/
 pnpm build:dir   # build + unpacked app only (release/win-unpacked)
 ```

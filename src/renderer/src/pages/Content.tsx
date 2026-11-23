@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Copy, ListPlus, PenLine, Sparkles, Trash2 } from 'lucide-react'
+import { Copy, FileDown, ListPlus, PenLine, Sparkles, Trash2 } from 'lucide-react'
 import type { Content, ContentFormat } from '@shared/types'
 import type { PageProps } from '../App'
 import { fmtDate, invoke, useAction, useQuery, useToast } from '../lib'
-import { Badge, Button, Card, Dropdown, Empty, Field, Input, ListInput, Modal, PageHeader } from '../components/ui'
-import BodyEditor from '../components/BodyEditor'
+import { Badge, Button, Card, Dropdown, Empty, Field, Input, ListInput, Modal, PageHeader, Toggle } from '../components/ui'
+import BodyEditor, { bodyToHtml } from '../components/BodyEditor'
 import { typeLabel } from './Catalog'
 
 export function ContentEditor({ content, format, siteName, onClose, onSaved }: { content: Content | null; format: ContentFormat; siteName?: string; onClose: () => void; onSaved: (c: Content) => void }) {
   const [draft, setDraft] = useState<Content | null>(content)
   const { busy, run } = useAction()
   const toast = useToast()
+  const [withImages, setWithImages] = useState(true)
   useEffect(() => setDraft(content), [content])
   if (!draft) return null
   const copy = async (text: string, what: string) => {
@@ -25,6 +26,25 @@ export function ContentEditor({ content, format, siteName, onClose, onSaved }: {
       wide
       footer={
         <>
+          <div className="mr-auto flex items-center gap-3">
+            <Button
+              icon={<FileDown className="size-4" />}
+              loading={busy === 'pdf'}
+              onClick={() =>
+                run(
+                  'pdf',
+                  async () => {
+                    await invoke('content:save', draft) // export what is on screen
+                    return invoke('content:exportPdf', { contentId: draft.id, bodyHtml: bodyToHtml(draft.body, format), includeImages: withImages })
+                  },
+                  (path) => (path ? `PDF saved: ${path}` : 'Export cancelled')
+                )
+              }
+            >
+              Export PDF
+            </Button>
+            <Toggle checked={withImages} onChange={setWithImages} label="Include screenshots" />
+          </div>
           <Button icon={<Copy className="size-4" />} onClick={() => copy(draft.title, 'Title')}>Copy title</Button>
           <Button icon={<Copy className="size-4" />} onClick={() => copy(draft.body, 'Body')}>Copy body</Button>
           <Button

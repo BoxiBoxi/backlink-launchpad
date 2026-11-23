@@ -3,6 +3,7 @@ import { extname, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { initDb } from './db'
 import { registerIpc } from './ipc'
+import { initEvents } from './events'
 import { loadEnv } from './config'
 import { settingsRepo } from './repo'
 import { startLinkScheduler } from './checker'
@@ -77,6 +78,7 @@ app.whenReady().then(() => {
     if (!IMAGE_EXT.has(extname(p).toLowerCase())) return new Response('Forbidden', { status: 403 })
     return net.fetch(pathToFileURL(p).toString())
   })
+  initEvents(() => mainWindow)
   registerIpc(() => mainWindow)
   startLinkScheduler(() => Number(settingsRepo.get('linkCheckIntervalHours') || 24))
   createWindow()

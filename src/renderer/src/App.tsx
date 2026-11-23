@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { BookOpen, FolderKanban, LayoutDashboard, Link2, ListChecks, PenLine, Settings as SettingsIcon } from 'lucide-react'
-import { ToastProvider, useQuery } from './lib'
+import { invoke, requestRefresh, ToastProvider, useQuery, useToast } from './lib'
 import { Dropdown } from './components/ui'
 import Dashboard from './pages/Dashboard'
 import Projects from './pages/Projects'
@@ -33,6 +33,23 @@ function Shell() {
   const [page, setPage] = useState<Page>('dashboard')
   const [projectId, setProjectId] = useState<number | null>(null)
   const projects = useQuery('projects:list')
+  const toast = useToast()
+
+  // Events from the posting session (auto-detected posts) are shown on every page.
+  useEffect(
+    () =>
+      window.api.onEvent((e) => {
+        if (e.type === 'autoPosted') {
+          toast('ok', `Posted on ${e.siteName}. Link saved:
+${e.url}`, {
+            label: 'Undo',
+            onClick: () => void invoke('tasks:undoPosted', { taskId: e.taskId, linkId: e.linkId }).then(requestRefresh)
+          })
+        }
+        requestRefresh()
+      }),
+    [toast]
+  )
 
   useEffect(() => {
     if (projectId === null && projects.data?.length) setProjectId(projects.data[0].id)

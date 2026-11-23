@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { Api, Channel } from '@shared/types'
+import type { Api, AppEvent, Channel } from '@shared/types'
 
 async function invoke<C extends Channel>(channel: C, ...args: Api[C][0]): Promise<Api[C][1]> {
   const res = (await ipcRenderer.invoke(channel, ...args)) as { ok: boolean; data?: Api[C][1]; error?: string }
@@ -7,4 +7,10 @@ async function invoke<C extends Channel>(channel: C, ...args: Api[C][0]): Promis
   return res.data as Api[C][1]
 }
 
-contextBridge.exposeInMainWorld('api', { invoke })
+function onEvent(cb: (event: AppEvent) => void): () => void {
+  const handler = (_e: Electron.IpcRendererEvent, event: AppEvent) => cb(event)
+  ipcRenderer.on('bb:event', handler)
+  return () => ipcRenderer.off('bb:event', handler)
+}
+
+contextBridge.exposeInMainWorld('api', { invoke, onEvent })

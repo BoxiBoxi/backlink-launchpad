@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
-import { CheckCircle2, Globe, ListChecks, LogIn, Pencil, Plus, ScanLine, SkipForward, Sparkles, Trash2, X } from 'lucide-react'
-import type { Content, Task } from '@shared/types'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { CheckCircle2, Globe, ListChecks, Loader2, LogIn, Pencil, Play, Plus, Radar, ScanLine, SkipForward, Sparkles, Square, Trash2, X } from 'lucide-react'
+import type { Content, SessionStatus, Task } from '@shared/types'
 import type { PageProps } from '../App'
-import { invoke, useAction, useQuery, useToast } from '../lib'
+import { invoke, useAction, useQuery, useRefresh, useToast } from '../lib'
 import { Badge, Button, Card, Dropdown, Empty, Field, Input, Modal, PageHeader, Toggle } from '../components/ui'
 import { LinkTypeBadge, typeLabel } from './Catalog'
 import { ContentEditor } from './Content'
@@ -24,6 +24,22 @@ export default function Queue({ projectId, go }: PageProps) {
   const [posting, setPosting] = useState<Task | null>(null)
   const [postUrl, setPostUrl] = useState('')
   const [editing, setEditing] = useState<Content | null>(null)
+  const [session, setSession] = useState<SessionStatus | null>(null)
+
+  useEffect(() => {
+    invoke('session:status').then(setSession).catch(() => undefined)
+    return window.api.onEvent((e) => {
+      if (e.type === 'session') setSession(e.status)
+    })
+  }, [])
+  const reloadTasks = tasks.reload
+  const reloadContents = contents.reload
+  useRefresh(
+    useCallback(() => {
+      reloadTasks()
+      reloadContents()
+    }, [reloadTasks, reloadContents])
+  )
 
   const siteMap = useMemo(() => new Map((sites.data ?? []).map((s) => [s.id, s])), [sites.data])
   const contentMap = useMemo(() => new Map((contents.data ?? []).map((c) => [c.id, c])), [contents.data])
@@ -77,10 +93,66 @@ export default function Queue({ projectId, go }: PageProps) {
               Brave login window
             </Button>
             <Button icon={<X className="size-4" />} onClick={() => run('close', () => invoke('browser:close'), 'Automated Brave closed')}>Close Brave</Button>
-            <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => { setPicked([]); setAdding(true) }}>Add sites</Button>
+            <Button icon={<Plus className="size-4" />} onClick={() => { setPicked([]); setAdding(true) }}>Add sites</Button>
+            <Button
+              variant="primary"
+              icon={<Play className="size-4" />}
+              loading={busy === 'session'}
+              disabled={!!session?.active}
+              onClick={() => run('session', () => invoke('session:start', projectId))}
+            >
+              Start session
+            </Button>
           </>
         }
       />
+
+      {session && session.projectId === projectId && (session.active || session.message) && (
+        <Card className={`mb-4 p-4 ${session.active ? 'border-gray-900' : ''}`}>
+          <div className="flex items-center gap-4">
+            <div className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${session.active ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500'}`}>
+              {session.active ? <Radar className="size-5" /> : <CheckCircle2 className="size-5" />}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+                {session.active ? (
+                  <>
+                    Session: {session.currentSiteName || '...'}
+                    <span className="font-normal text-gray-500">site {session.position} of {session.total} · {session.posted} posted</span>
+                    <Loader2 className="size-3.5 animate-spin text-gray-400" />
+                  </>
+                ) : (
+                  'Session ended'
+                )}
+              </div>
+              <p className="mt-0.5 text-xs text-gray-500">{session.message}</p>
+            </div>
+            {session.active && (
+              <div className="flex shrink-0 gap-2">
+                <Button
+                  size="sm"
+                  icon={<CheckCircle2 className="size-3.5" />}
+                  onClick={() => {
+                    const t = (tasks.data ?? []).find((x) => x.id === session.currentTaskId)
+                    if (t) {
+                      setPosting(t)
+                      setPostUrl('')
+                    }
+                  }}
+                >
+                  Posted
+                </Button>
+                <Button size="sm" icon={<SkipForward className="size-3.5" />} loading={busy === 'next'} onClick={() => run('next', () => invoke('session:next'))}>
+                  Next site
+                </Button>
+                <Button size="sm" variant="danger" icon={<Square className="size-3.5" />} onClick={() => run('stop', () => invoke('session:stop'))}>
+                  Stop
+                </Button>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
 
       <Card className="overflow-hidden">
         {tasks.data?.length === 0 ? (
@@ -101,7 +173,7 @@ export default function Queue({ projectId, go }: PageProps) {
                 const site = siteMap.get(t.siteId)
                 const c = latestContent(t)
                 return (
-                  <tr key={t.id} className="border-b border-gray-50 last:border-0">
+                  <tr key={t.id} className={`border-b border-gray-50 last:border-0 ${session?.active && session.currentTaskId === t.id ? 'bg-gray-50' : ''}`}>
                     <td className="px-4 py-3">
                       <div className="font-medium text-gray-900">{site?.name ?? 'Deleted site'}</div>
                       <div className="text-xs text-gray-400">{site ? `${site.language.toUpperCase()} · ${typeLabel(site.type)}` : ''}</div>
