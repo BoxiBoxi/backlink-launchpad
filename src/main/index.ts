@@ -1,5 +1,6 @@
-import { app, BrowserWindow, shell } from 'electron'
-import { join } from 'node:path'
+import { app, BrowserWindow, net, protocol, shell } from 'electron'
+import { extname, join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { initDb } from './db'
 import { registerIpc } from './ipc'
 import { loadEnv } from './config'
@@ -9,6 +10,10 @@ import { closePostingBrowser } from './browser'
 
 // Optional isolated data dir (used by tests): BB_USER_DATA=C:\some\dir
 if (process.env['BB_USER_DATA']) app.setPath('userData', process.env['BB_USER_DATA'])
+
+// bb-file://img?p=<absolute path> serves local images (logo, screenshots) to the renderer.
+protocol.registerSchemesAsPrivileged([{ scheme: 'bb-file', privileges: { secure: true, supportFetchAPI: true, stream: true } }])
+const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
 let mainWindow: BrowserWindow | null = null
 
@@ -50,6 +55,11 @@ app.whenReady().then(() => {
   const userData = app.getPath('userData')
   initDb(userData)
   console.log('[db] ready in', userData)
+  protocol.handle('bb-file', (req) => {
+    const p = new URL(req.url).searchParams.get('p') || ''
+    if (!IMAGE_EXT.has(extname(p).toLowerCase())) return new Response('Forbidden', { status: 403 })
+    return net.fetch(pathToFileURL(p).toString())
+  })
   registerIpc(() => mainWindow)
   startLinkScheduler(() => Number(settingsRepo.get('linkCheckIntervalHours') || 24))
   createWindow()

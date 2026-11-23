@@ -16,6 +16,8 @@ export interface Site {
   language: Lang
   topics: string[]
   dr: number | null
+  /** 0-100, higher = post here first */
+  priority: number
   linkType: LinkType
   needsReview: boolean
   format: ContentFormat
@@ -43,6 +45,8 @@ export interface Project {
   shortDescription: string
   longDescription: string
   logoPath: string
+  /** Screenshots / mockups (absolute paths) uploaded to listing forms. */
+  images: string[]
   language: Lang
   topics: string[]
   targets: TargetLink[]
@@ -132,7 +136,7 @@ export interface SettingsInput {
 }
 
 export interface OpenResult {
-  filled: { title: boolean; body: boolean }
+  filled: { title: boolean; body: boolean; files: number }
   copiedToClipboard: boolean
   message: string
 }
@@ -156,6 +160,7 @@ export interface Api {
   'projects:delete': [[number], void]
   'projects:stats': [[], ProjectStats[]]
   'projects:pickLogo': [[], string | null]
+  'projects:pickImages': [[], string[]]
 
   'content:list': [[number | null], Content[]]
   'content:generate': [[{ projectId: number; siteId: number; linkUrl?: string; anchor?: string; extra?: string }], Content]

@@ -156,9 +156,11 @@ export interface OpenForPostingInput {
   url: string
   title: string
   body: string
+  logo: string
+  images: string[]
 }
 
-export async function openForPosting(input: OpenForPostingInput): Promise<{ title: boolean; body: boolean }> {
+export async function openForPosting(input: OpenForPostingInput): Promise<{ title: boolean; body: boolean; files: number }> {
   const ctx = await ensurePostingContext(input.bravePath, input.profileDir)
   const blank = ctx.pages().find((p) => p.url() === 'about:blank')
   const page = blank ?? (await ctx.newPage())
@@ -170,8 +172,48 @@ export async function openForPosting(input: OpenForPostingInput): Promise<{ titl
   let titleMark: string | null = null
   if (input.title) titleMark = await tryFill(frames, TITLE_SELECTORS, input.title, page)
   const bodyMark = input.body ? await tryFill(frames, BODY_SELECTORS, input.body, page, titleMark ?? undefined) : null
+  const files = await attachImages(frames, input.logo, input.images)
   // Leave the page as is: the user reviews, signs in / solves CAPTCHA if needed, and submits.
-  return { title: titleMark !== null, body: bodyMark !== null }
+  return { title: titleMark !== null, body: bodyMark !== null, files }
+}
+
+/**
+ * Attach the logo / screenshots to image upload inputs (also hidden ones behind custom buttons).
+ * Inputs whose name/id/label mention logo, icon or avatar get the logo; the others get screenshots.
+ */
+async function attachImages(frames: Frame[], logo: string, images: string[]): Promise<number> {
+  const logoFile = logo && existsSync(logo) ? logo : ''
+  const shots = images.filter((p) => existsSync(p))
+  if (!logoFile && !shots.length) return 0
+  let attached = 0
+  let shotIdx = 0
+  for (const frame of frames) {
+    const inputs = frame.locator('input[type="file"]')
+    const n = Math.min(await inputs.count().catch(() => 0), 8)
+    for (let i = 0; i < n; i++) {
+      const el = inputs.nth(i)
+      try {
+        const info = await el.evaluate((node) => {
+          const input = node as HTMLInputElement
+          const label = input.labels?.[0]?.textContent || input.closest('label,div,section')?.textContent?.slice(0, 200) || ''
+          return { hint: `${input.name} ${input.id} ${input.getAttribute('aria-label') || ''} ${label}`.toLowerCase(), accept: input.accept || '', multiple: input.multiple }
+        })
+        if (info.accept && !/image|\.png|\.jpe?g|\.webp|\*/i.test(info.accept)) continue
+        const wantsLogo = /logo|icon|avatar|favicon|thumbnail/.test(info.hint)
+        let files: string[] = []
+        if (wantsLogo && logoFile) files = [logoFile]
+        else if (shots.length) {
+          files = info.multiple ? shots.slice(0, 5) : [shots[shotIdx++ % shots.length]]
+        } else if (logoFile) files = [logoFile]
+        if (!files.length) continue
+        await el.setInputFiles(files)
+        attached++
+      } catch {
+        /* skip this input */
+      }
+    }
+  }
+  return attached
 }
 
 /** URL of the most recently used tab in the posting browser. */

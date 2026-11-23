@@ -29,7 +29,7 @@ type SiteRow = typeof sites.$inferSelect
 const toSite = (r: SiteRow): Site => ({ ...r, topics: arr<string>(r.topics) }) as Site
 
 export const siteRepo = {
-  list: (): Site[] => getDb().select().from(sites).orderBy(sites.language, sites.type, sites.name).all().map(toSite),
+  list: (): Site[] => getDb().select().from(sites).orderBy(desc(sites.priority), sites.name).all().map(toSite),
   get: (id: number): Site | undefined => {
     const r = getDb().select().from(sites).where(eq(sites.id, id)).get()
     return r ? toSite(r) : undefined
@@ -57,6 +57,7 @@ const toProject = (r: ProjectRow): Project => ({
   ...r,
   language: r.language as Project['language'],
   topics: arr<string>(r.topics),
+  images: arr<string>(r.images),
   targets: arr<Project['targets'][number]>(r.targets)
 })
 
@@ -74,6 +75,7 @@ export const projectRepo = {
       shortDescription: input.shortDescription,
       longDescription: input.longDescription,
       logoPath: input.logoPath,
+      images: JSON.stringify(input.images ?? []),
       language: input.language,
       topics: JSON.stringify(input.topics ?? []),
       targets: JSON.stringify(input.targets ?? [])

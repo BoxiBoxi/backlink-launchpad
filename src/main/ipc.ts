@@ -48,6 +48,12 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
   })
   handle('projects:delete', (id) => void projectRepo.delete(id))
   handle('projects:stats', () => projectRepo.stats())
+  handle('projects:pickImages', async () => {
+    const win = getWindow()
+    const opts = { properties: ['openFile' as const, 'multiSelections' as const], filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }] }
+    const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    return res.canceled ? [] : res.filePaths
+  })
   handle('projects:pickLogo', async () => {
     const win = getWindow()
     const opts = { properties: ['openFile' as const], filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'svg', 'webp'] }] }
@@ -104,18 +110,27 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
       clipboard.writeText(content.body)
       copied = true
     }
+    const project = projectRepo.get(task.projectId)
     const filled = await openForPosting({
+      logo: project?.logoPath || '',
+      images: project?.images ?? [],
       bravePath: requireBrave(),
       profileDir: profileDir(),
       url: site.submitUrl || site.url,
-      title: content?.title ?? '',
-      body: content ? (site.format === 'markdown' || site.format === 'html' ? content.body : stripMarkdown(content.body)) : ''
+      // No AI content yet: fall back to the brand profile (fits directory/listing forms).
+      title: content?.title ?? project?.name ?? '',
+      body: content
+        ? site.format === 'markdown' || site.format === 'html'
+          ? content.body
+          : stripMarkdown(content.body)
+        : project?.shortDescription || project?.tagline || ''
     })
     taskRepo.update({ id: task.id, status: task.status === 'queued' ? 'opened' : task.status })
     const parts = [
       filled.title ? 'title filled' : 'title not detected',
       filled.body ? 'body filled' : 'body not detected',
-      copied ? 'body copied to clipboard' : 'no content yet (generate it first)'
+      ...(filled.files ? [`${filled.files} image field(s) attached`] : []),
+      copied ? 'body copied to clipboard' : 'no AI content yet, used the project name and short description'
     ]
     return {
       filled,

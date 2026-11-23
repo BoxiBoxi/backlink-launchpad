@@ -4,9 +4,10 @@
 
 import type { SiteInput } from '@shared/types'
 import { EXTRA_SEEDS } from './catalogExtra'
+import { MORE_SEEDS, PRIORITIES } from './catalogMore'
 
 export type SeedSite = Pick<SiteInput, 'name' | 'url' | 'submitUrl' | 'type' | 'language' | 'topics' | 'format' | 'rules'> &
-  Partial<Pick<SiteInput, 'needsReview' | 'maxLength' | 'notes'>>
+  Partial<Pick<SiteInput, 'needsReview' | 'maxLength' | 'notes' | 'priority'>>
 
 const seeds: SeedSite[] = [
   // AI / SaaS directories
@@ -50,8 +51,8 @@ const seeds: SeedSite[] = [
   { name: 'Voz', url: 'https://voz.vn', submitUrl: 'https://voz.vn/', type: 'forum', language: 'vi', topics: ['công nghệ', 'lập trình'], format: 'plain', maxLength: 2000, rules: 'Diễn đàn khó tính; chỉ đăng ở box phù hợp, không quảng cáo.' },
 ]
 
-/** Bump when the seed list grows: existing databases get the missing sites (matched by hostname). */
-export const CATALOG_VERSION = 2
+/** Bump when the seed list grows: existing databases get the missing sites (matched by seedKey). */
+export const CATALOG_VERSION = 3
 
 export const seedHost = (url: string) => {
   try {
@@ -61,16 +62,29 @@ export const seedHost = (url: string) => {
   }
 }
 
-// Researched list (catalogExtra.ts, Nov 2026) wins over the original hand-written entries for the same host.
-const merged = new Map<string, SeedSite>()
-for (const s of [...seeds, ...EXTRA_SEEDS]) merged.set(seedHost(s.url), s)
+/** Identity of a catalog entry: the hostname, plus the subreddit for reddit.com/r/... entries. */
+export const seedKey = (url: string) => {
+  const host = seedHost(url)
+  if (host.endsWith('reddit.com')) {
+    const sub = url.match(/reddit\.com\/(r\/[^/?#]+)/i)
+    if (sub) return `reddit.com/${sub[1].toLowerCase()}`
+  }
+  return host
+}
 
-export const CATALOG_SEED: SiteInput[] = [...merged.values()].map((s) => ({
-  needsReview: false,
-  maxLength: null,
-  notes: '',
-  ...s,
-  dr: null,
-  linkType: 'unknown',
-  status: 'active'
-}))
+// Later lists win for the same key: hand-written < catalogExtra.ts < catalogMore.ts (all researched Nov 2026).
+const merged = new Map<string, SeedSite>()
+for (const s of [...seeds, ...EXTRA_SEEDS, ...MORE_SEEDS]) merged.set(seedKey(s.url), s)
+
+export const CATALOG_SEED: SiteInput[] = [...merged.values()]
+  .map((s) => ({
+    needsReview: false,
+    maxLength: null,
+    notes: '',
+    ...s,
+    priority: s.priority ?? PRIORITIES[seedKey(s.url)] ?? PRIORITIES[seedHost(s.url)] ?? 50,
+    dr: null,
+    linkType: 'unknown' as const,
+    status: 'active' as const
+  }))
+  .sort((a, b) => b.priority - a.priority)

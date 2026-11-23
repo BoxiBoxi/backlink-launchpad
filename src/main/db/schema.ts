@@ -12,6 +12,7 @@ export const sites = sqliteTable('sites', {
   language: text('language').notNull().default('en'),
   topics: text('topics').notNull().default('[]'),
   dr: integer('dr'),
+  priority: integer('priority').notNull().default(50),
   linkType: text('link_type').notNull().default('unknown'),
   needsReview: integer('needs_review', { mode: 'boolean' }).notNull().default(false),
   format: text('format').notNull().default('plain'),
@@ -32,6 +33,7 @@ export const projects = sqliteTable('projects', {
   shortDescription: text('short_description').notNull().default(''),
   longDescription: text('long_description').notNull().default(''),
   logoPath: text('logo_path').notNull().default(''),
+  images: text('images').notNull().default('[]'),
   language: text('language').notNull().default('en'),
   topics: text('topics').notNull().default('[]'),
   targets: text('targets').notNull().default('[]'),
@@ -96,7 +98,7 @@ export const MIGRATIONS: string[] = [
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL, url TEXT NOT NULL, submit_url TEXT NOT NULL DEFAULT '',
     type TEXT NOT NULL DEFAULT 'directory', language TEXT NOT NULL DEFAULT 'en',
-    topics TEXT NOT NULL DEFAULT '[]', dr INTEGER, link_type TEXT NOT NULL DEFAULT 'unknown',
+    topics TEXT NOT NULL DEFAULT '[]', dr INTEGER, priority INTEGER NOT NULL DEFAULT 50, link_type TEXT NOT NULL DEFAULT 'unknown',
     needs_review INTEGER NOT NULL DEFAULT 0, format TEXT NOT NULL DEFAULT 'plain', max_length INTEGER,
     rules TEXT NOT NULL DEFAULT '', notes TEXT NOT NULL DEFAULT '', status TEXT NOT NULL DEFAULT 'active',
     alive TEXT NOT NULL DEFAULT 'unknown', http_status INTEGER, last_checked_at TEXT
@@ -105,7 +107,7 @@ export const MIGRATIONS: string[] = [
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL, domain TEXT NOT NULL DEFAULT '', tagline TEXT NOT NULL DEFAULT '',
     short_description TEXT NOT NULL DEFAULT '', long_description TEXT NOT NULL DEFAULT '',
-    logo_path TEXT NOT NULL DEFAULT '', language TEXT NOT NULL DEFAULT 'en',
+    logo_path TEXT NOT NULL DEFAULT '', images TEXT NOT NULL DEFAULT '[]', language TEXT NOT NULL DEFAULT 'en',
     topics TEXT NOT NULL DEFAULT '[]', targets TEXT NOT NULL DEFAULT '[]',
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
   )`,
@@ -139,4 +141,10 @@ export const MIGRATIONS: string[] = [
     created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
   )`,
   `CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)`
+]
+
+/** Columns added after the first release: [table, column, definition]. Added with ALTER TABLE when missing. */
+export const ADDED_COLUMNS: [string, string, string][] = [
+  ['sites', 'priority', 'INTEGER NOT NULL DEFAULT 50'],
+  ['projects', 'images', "TEXT NOT NULL DEFAULT '[]'"]
 ]

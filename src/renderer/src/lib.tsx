@@ -103,3 +103,6 @@ export const splitList = (s: string) =>
     .split(',')
     .map((x) => x.trim())
     .filter(Boolean)
+
+/** URL for a local image file (served by the main process). */
+export const localImage = (path: string) => `bb-file://img?p=${encodeURIComponent(path)}`

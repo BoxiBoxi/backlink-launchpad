@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { FolderKanban, ImageIcon, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { FolderKanban, ImageIcon, ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react'
 import type { Project, ProjectInput } from '@shared/types'
 import type { PageProps } from '../App'
-import { invoke, useAction, useQuery } from '../lib'
+import { invoke, localImage, useAction, useQuery } from '../lib'
 import { Badge, Button, Card, Dropdown, Empty, Field, Input, ListInput, Modal, PageHeader, Textarea } from '../components/ui'
 
 const blank: ProjectInput = {
@@ -12,6 +12,7 @@ const blank: ProjectInput = {
   shortDescription: '',
   longDescription: '',
   logoPath: '',
+  images: [],
   language: 'en',
   topics: [],
   targets: [{ url: '', anchors: [] }]
@@ -58,7 +59,7 @@ export default function Projects({ refreshProjects, setProjectId }: PageProps) {
           <Card key={p.id} className="p-6">
             <div className="flex items-start gap-4">
               <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
-                {p.logoPath ? <img src={`file:///${p.logoPath.replace(/\\/g, '/')}`} className="size-full object-contain" /> : <ImageIcon className="size-5 text-gray-400" />}
+                {p.logoPath ? <img src={localImage(p.logoPath)} className="size-full object-contain" /> : <ImageIcon className="size-5 text-gray-400" />}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
@@ -68,6 +69,13 @@ export default function Projects({ refreshProjects, setProjectId }: PageProps) {
                 </div>
                 {p.tagline && <p className="mt-0.5 text-sm text-gray-600">{p.tagline}</p>}
                 {p.shortDescription && <p className="mt-2 text-sm text-gray-500">{p.shortDescription}</p>}
+                {p.images.length > 0 && (
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                    {p.images.map((img) => (
+                      <img key={img} src={localImage(img)} title={img} className="h-16 w-24 shrink-0 rounded-lg border border-gray-200 object-cover object-top" />
+                    ))}
+                  </div>
+                )}
                 <div className="mt-3 flex flex-col gap-1.5">
                   {p.targets.map((t, i) => (
                     <div key={i} className="flex flex-wrap items-center gap-1.5 text-sm">
@@ -136,6 +144,36 @@ export default function Projects({ refreshProjects, setProjectId }: PageProps) {
                 </Button>
               </div>
             </Field>
+            <div className="col-span-2">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Screenshots / mockups ({editing.images.length})</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  icon={<ImagePlus className="size-3.5" />}
+                  onClick={async () => {
+                    const picked = await invoke('projects:pickImages')
+                    if (picked.length) setEditing({ ...editing, images: [...new Set([...editing.images, ...picked])] })
+                  }}
+                >
+                  Add images
+                </Button>
+              </div>
+              <p className="mb-2 text-xs text-gray-400">Attached to image upload fields when a task is opened (logo fields get the logo).</p>
+              <div className="flex flex-wrap gap-2">
+                {editing.images.map((img) => (
+                  <div key={img} className="group relative">
+                    <img src={localImage(img)} title={img} className="h-20 w-32 rounded-lg border border-gray-200 object-cover object-top" />
+                    <button
+                      onClick={() => setEditing({ ...editing, images: editing.images.filter((x) => x !== img) })}
+                      className="absolute right-1 top-1 hidden rounded-md bg-white/90 p-0.5 text-gray-600 shadow group-hover:block"
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="col-span-2">
               <div className="mb-2 flex items-center justify-between">
                 <span className="text-xs font-medium uppercase tracking-wide text-gray-500">Target URLs and anchor texts</span>

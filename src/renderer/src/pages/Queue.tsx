@@ -180,7 +180,7 @@ export default function Queue({ projectId, go }: PageProps) {
           {addable.map((s) => (
             <div key={s.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-gray-50">
               <Toggle checked={picked.includes(s.id)} onChange={(v) => setPicked(v ? [...picked, s.id] : picked.filter((x) => x !== s.id))} label={s.name} />
-              <span className="text-xs text-gray-400">{s.language.toUpperCase()} · {typeLabel(s.type)}</span>
+              <span className="text-xs text-gray-400">P{s.priority} · {s.language.toUpperCase()} · {typeLabel(s.type)}</span>
             </div>
           ))}
           {!addable.length && <p className="py-6 text-center text-sm text-gray-400">Every matching site is already queued.</p>}
