@@ -13,7 +13,7 @@
     "build": "electron-vite build && electron-builder --win --x64",
     "build:dir": "electron-vite build && electron-builder --win --x64 --dir",
     "postinstall": "electron-builder install-app-deps",
-    "test": "esbuild scripts/test-postDetect.ts --bundle --platform=node --outfile=out/test/postDetect.cjs --log-level=warning && node out/test/postDetect.cjs"
+    "test": "esbuild scripts/test-postDetect.ts --bundle --platform=node --outfile=out/test/postDetect.cjs --log-level=warning && node out/test/postDetect.cjs && esbuild scripts/test-catalog.ts --bundle --platform=node --alias:@shared=./src/shared --outfile=out/test/catalog.cjs --log-level=warning && node out/test/catalog.cjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

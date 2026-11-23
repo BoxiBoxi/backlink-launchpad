@@ -12,5 +12,5 @@
     "noEmit": true,
     "paths": { "@core/*": ["./src/core/*"], "@shared/*": ["./src/shared/*"] }
   },
-  "include": ["electron.vite.config.ts", "src/main/**/*", "src/preload/**/*", "src/core/**/*", "src/shared/**/*"]
+  "include": ["electron.vite.config.ts", "src/main/**/*", "src/preload/**/*", "src/core/**/*", "src/shared/**/*", "catalog/*.json"]
 }
