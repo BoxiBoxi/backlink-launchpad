@@ -10,8 +10,8 @@ never solves CAPTCHAs and never creates accounts.
 | Section | What it does |
 | --- | --- |
 | Dashboard | Placed / live / dofollow links and pending tasks per project |
-| Projects | Brand profile: name, domain, tagline, short/long description, logo, topics, target URLs with anchor texts |
-| Site catalog | 100 seeded targets (AI/SaaS directories, launch sites, UGC blogs, communities, Q&A, 19 Vietnamese sites). Editable; "Check alive" probes each site |
+| Projects | Brand profile: name, domain, tagline, short/long description, logo, screenshots/mockups, topics, target URLs with anchor texts. Logo and screenshots are attached to image upload fields when a task is opened |
+| Site catalog | 414 seeded targets (AI/SaaS directories, launch sites, UGC blogs, communities, forums, Q&A, profiles, 45 Vietnamese sites), each with a priority score 0-100 (relevance + authority + cost/effort + likely link value). Sorted by priority; filter by type, language, priority tier. Most submit URLs are unverified (`review` badge). Editable; "Check alive" probes each site |
 | AI content | One unique post per (project, site), respecting the site's language, type, length, format and link rules. Editable |
 | Posting queue | Opens Brave on the submit page, fills title/body when detected, copies the body to the clipboard. "Posted" stores the live URL (paste it or read it from the active Brave tab) |
 | Link monitor | Checks each placed link: page live, link present, `rel` (dofollow / nofollow / ugc / sponsored), anchor text. Re-checks automatically (interval in Settings) |
@@ -73,7 +73,7 @@ pnpm build:dir   # build + unpacked app only (release/win-unpacked)
 
 ```
 src/core/      portable logic, no Electron: ai.ts (gateway/model fallback), contentGen.ts (prompts),
-               linkAnalysis.ts (rel/anchor detection), catalogSeed.ts + catalogExtra.ts (site list)
+               linkAnalysis.ts (rel/anchor detection), catalogSeed.ts + catalogExtra.ts + catalogMore*.ts (site list, priorities)
 src/main/      Electron main: db/, repo.ts, ipc.ts, browser.ts (Brave/Playwright), checker.ts, config.ts
 src/preload/   typed IPC bridge (window.api.invoke)
 src/shared/    types shared by all layers, including the IPC contract (Api)

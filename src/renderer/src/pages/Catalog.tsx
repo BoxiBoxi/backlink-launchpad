@@ -136,7 +136,7 @@ export default function Catalog(_: PageProps) {
             {shown.map((s) => (
               <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
                 <td className="px-4 py-3"><PriorityBar value={s.priority} /></td>
-                <td className="max-w-md px-3 py-3">
+                <td className="max-w-sm px-3 py-3">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-gray-900">{s.name}</span>
                     {s.needsReview && <Badge tone="blue">review</Badge>}
@@ -144,7 +144,7 @@ export default function Catalog(_: PageProps) {
                   </div>
                   <div className="truncate text-xs text-gray-400" title={s.rules}>{s.rules || s.url}</div>
                 </td>
-                <td className="px-3 py-3 text-gray-600">{typeLabel(s.type)}</td>
+                <td className="whitespace-nowrap px-3 py-3 text-gray-600">{typeLabel(s.type)}</td>
                 <td className="px-3 py-3 uppercase text-gray-600">{s.language}</td>
                 <td className="px-3 py-3 text-gray-600">{s.dr ?? '-'}</td>
                 <td className="px-3 py-3"><LinkTypeBadge type={s.linkType} /></td>

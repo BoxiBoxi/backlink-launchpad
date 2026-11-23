@@ -52,7 +52,7 @@ const seeds: SeedSite[] = [
 ]
 
 /** Bump when the seed list grows: existing databases get the missing sites (matched by seedKey). */
-export const CATALOG_VERSION = 3
+export const CATALOG_VERSION = 4
 
 export const seedHost = (url: string) => {
   try {
