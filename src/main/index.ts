@@ -7,6 +7,9 @@ import { settingsRepo } from './repo'
 import { startLinkScheduler } from './checker'
 import { closePostingBrowser } from './browser'
 
+// Optional isolated data dir (used by tests): BB_USER_DATA=C:\some\dir
+if (process.env['BB_USER_DATA']) app.setPath('userData', process.env['BB_USER_DATA'])
+
 let mainWindow: BrowserWindow | null = null
 
 function createWindow() {

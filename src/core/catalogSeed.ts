@@ -3,11 +3,12 @@
 // site checker marks dead ones, and everything is editable in the Catalog screen.
 
 import type { SiteInput } from '@shared/types'
+import { EXTRA_SEEDS } from './catalogExtra'
 
-type Seed = Pick<SiteInput, 'name' | 'url' | 'submitUrl' | 'type' | 'language' | 'topics' | 'format' | 'rules'> &
+export type SeedSite = Pick<SiteInput, 'name' | 'url' | 'submitUrl' | 'type' | 'language' | 'topics' | 'format' | 'rules'> &
   Partial<Pick<SiteInput, 'needsReview' | 'maxLength' | 'notes'>>
 
-const seeds: Seed[] = [
+const seeds: SeedSite[] = [
   // AI / SaaS directories
   { name: "There's An AI For That", url: 'https://theresanaiforthat.com', submitUrl: 'https://theresanaiforthat.com/submit/', type: 'directory', language: 'en', topics: ['ai', 'tools'], format: 'plain', needsReview: true, maxLength: 600, rules: 'Paid submission. Short factual description, one product URL field.' },
   { name: 'Futurepedia', url: 'https://www.futurepedia.io', submitUrl: 'https://www.futurepedia.io/submit-tool', type: 'directory', language: 'en', topics: ['ai', 'tools'], format: 'plain', needsReview: true, maxLength: 600, rules: 'Paid/queued submission. Pick categories carefully.' },
@@ -47,10 +48,24 @@ const seeds: Seed[] = [
   { name: 'Viblo', url: 'https://viblo.asia', submitUrl: 'https://viblo.asia/publish/post', type: 'ugc_blog', language: 'vi', topics: ['lập trình', 'ai', 'web'], format: 'markdown', rules: 'Bài kỹ thuật cho dev Việt. Markdown. Không spam link.' },
   { name: 'Tinh tế', url: 'https://tinhte.vn', submitUrl: 'https://tinhte.vn/', type: 'forum', language: 'vi', topics: ['công nghệ', 'phần mềm'], format: 'plain', maxLength: 3000, rules: 'Chia sẻ trải nghiệm công nghệ. Link quảng cáo dễ bị xoá.' },
   { name: 'Voz', url: 'https://voz.vn', submitUrl: 'https://voz.vn/', type: 'forum', language: 'vi', topics: ['công nghệ', 'lập trình'], format: 'plain', maxLength: 2000, rules: 'Diễn đàn khó tính; chỉ đăng ở box phù hợp, không quảng cáo.' },
-  { name: 'Webtretho', url: 'https://www.webtretho.com', submitUrl: 'https://www.webtretho.com/', type: 'forum', language: 'vi', topics: ['đời sống', 'kinh doanh online'], format: 'plain', needsReview: true, maxLength: 3000, rules: 'Cộng đồng đời sống; chỉ phù hợp chủ đề kinh doanh online / công cụ.' }
 ]
 
-export const CATALOG_SEED: SiteInput[] = seeds.map((s) => ({
+/** Bump when the seed list grows: existing databases get the missing sites (matched by hostname). */
+export const CATALOG_VERSION = 2
+
+export const seedHost = (url: string) => {
+  try {
+    return new URL(url).hostname.toLowerCase().replace(/^www\./, '')
+  } catch {
+    return url
+  }
+}
+
+// Researched list (catalogExtra.ts, Nov 2026) wins over the original hand-written entries for the same host.
+const merged = new Map<string, SeedSite>()
+for (const s of [...seeds, ...EXTRA_SEEDS]) merged.set(seedHost(s.url), s)
+
+export const CATALOG_SEED: SiteInput[] = [...merged.values()].map((s) => ({
   needsReview: false,
   maxLength: null,
   notes: '',
