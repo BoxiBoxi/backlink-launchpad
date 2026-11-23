@@ -8,8 +8,11 @@ import { settingsRepo } from './repo'
 import { startLinkScheduler } from './checker'
 import { closePostingBrowser } from './browser'
 
-// Optional isolated data dir (used by tests): BB_USER_DATA=C:\some\dir
-if (process.env['BB_USER_DATA']) app.setPath('userData', process.env['BB_USER_DATA'])
+// Pin the data folder to %APPDATA%\BacklinkBuilder however the app is launched (electron ., a script path, or the
+// installed exe), otherwise Electron derives it from the launch context and data can end up in %APPDATA%\Electron.
+// BB_USER_DATA=C:\some\dir overrides it (used by tests).
+app.setName('BacklinkBuilder')
+app.setPath('userData', process.env['BB_USER_DATA'] || join(app.getPath('appData'), 'BacklinkBuilder'))
 
 // bb-file://img?p=<absolute path> serves local images (logo, screenshots) to the renderer.
 protocol.registerSchemesAsPrivileged([{ scheme: 'bb-file', privileges: { secure: true, supportFetchAPI: true, stream: true } }])
