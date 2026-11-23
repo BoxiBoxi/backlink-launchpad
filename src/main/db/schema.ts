@@ -12,6 +12,7 @@ export const sites = sqliteTable('sites', {
   language: text('language').notNull().default('en'),
   topics: text('topics').notNull().default('[]'),
   dr: integer('dr'),
+  drCheckedAt: text('dr_checked_at'),
   priority: integer('priority').notNull().default(50),
   linkType: text('link_type').notNull().default('unknown'),
   needsReview: integer('needs_review', { mode: 'boolean' }).notNull().default(false),
@@ -22,6 +23,7 @@ export const sites = sqliteTable('sites', {
   status: text('status').notNull().default('active'),
   alive: text('alive').notNull().default('unknown'),
   httpStatus: integer('http_status'),
+  checkError: text('check_error').notNull().default(''),
   lastCheckedAt: text('last_checked_at')
 })
 
@@ -146,5 +148,7 @@ export const MIGRATIONS: string[] = [
 /** Columns added after the first release: [table, column, definition]. Added with ALTER TABLE when missing. */
 export const ADDED_COLUMNS: [string, string, string][] = [
   ['sites', 'priority', 'INTEGER NOT NULL DEFAULT 50'],
-  ['projects', 'images', "TEXT NOT NULL DEFAULT '[]'"]
+  ['projects', 'images', "TEXT NOT NULL DEFAULT '[]'"],
+  ['sites', 'dr_checked_at', 'TEXT'],
+  ['sites', 'check_error', "TEXT NOT NULL DEFAULT ''"]
 ]

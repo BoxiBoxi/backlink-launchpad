@@ -8,6 +8,7 @@ import { closePostingBrowser, currentPostingUrl, isPostingBrowserRunning, openPr
 import { markPosted, openTask, requireBrave, undoPosted } from './tasks'
 import { nextInSession, onTaskPostedManually, sessionStatus, startSession, stopSession } from './session'
 import { exportContentPdf } from './pdf'
+import { scanDr } from './drScan'
 import { checkLinks, checkSites } from './checker'
 
 type Handler<C extends Channel> = (...args: Api[C][0]) => Promise<Api[C][1]> | Api[C][1]
@@ -29,6 +30,7 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
   handle('sites:save', (input) => siteRepo.save(input))
   handle('sites:delete', (id) => void siteRepo.delete(id))
   handle('sites:check', (ids) => checkSites(ids))
+  handle('sites:fetchDr', ({ ids, force }) => scanDr(ids, force))
 
   // projects
   handle('projects:list', () => projectRepo.list())

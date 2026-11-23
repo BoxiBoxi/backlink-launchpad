@@ -11,7 +11,7 @@ never solves CAPTCHAs and never creates accounts.
 | --- | --- |
 | Dashboard | Placed / live / dofollow links and pending tasks per project |
 | Projects | Brand profile: name, domain, tagline, short/long description, logo, screenshots/mockups, topics, target URLs with anchor texts. Logo and screenshots are attached to image upload fields when a task is opened |
-| Site catalog | 414 seeded targets (AI/SaaS directories, launch sites, UGC blogs, communities, forums, Q&A, profiles, 45 Vietnamese sites), each with a priority score 0-100 (relevance + authority + cost/effort + likely link value). Sorted by priority; filter by type, language, priority tier. Most submit URLs are unverified (`review` badge). Editable; "Check alive" probes each site |
+| Site catalog | 414 seeded targets (AI/SaaS directories, launch sites, UGC blogs, communities, forums, Q&A, profiles, 45 Vietnamese sites), each with a priority score 0-100 (relevance + authority + cost/effort + likely link value). Sorted by priority; filter by type, language, priority tier. Most submit URLs are unverified (`review` badge). Editable; "Check alive" probes each site. **Fetch DR** fills the DR column from Ahrefs (`AHREFS_API_KEY`, free `domain-rating-free` endpoint, 0 API units, by root domain); sort by DR. Alive check reports `down` (DNS gone, 404/410, 5xx) separately from `unreachable` (refused/reset/TLS/timeout from your network, often an ISP block) |
 | AI content | One unique post per (project, site), respecting the site's language, type, length, format and link rules. Editable. Editor follows the site format (HTML: WYSIWYG + source + preview; Markdown/plain: write + preview). **Export PDF** (optionally with screenshots) for document sites such as Yumpu, Issuu, Scribd |
 | Posting queue | **Open** a task: Brave goes to the submit page, fills title/body, attaches logo/screenshots, copies the body. **Start session** walks the open tasks by priority: after you submit, it detects the live post URL in Brave (`src/core/postDetect.ts`), saves it to the Link monitor (with Undo) and opens the next site. You still review, sign in, solve CAPTCHAs and click submit. Directories that only show a "pending review" page are not detected: use **Posted** or **Next site** |
 | Link monitor | Checks each placed link: page live, link present, `rel` (dofollow / nofollow / ugc / sponsored), anchor text. Re-checks automatically (interval in Settings) |
@@ -39,6 +39,7 @@ Same names as the Wriai project (OpenAI-compatible chat API):
 | `OPENAI_TEXT_MODEL` | Models, `|` separated; first is primary, the rest are fallbacks |
 | `OPENAI_TIMEOUT_MS` | Request timeout (default 120000) |
 | `OPENAI_END_POINT_BK_1`, `OPENAI_API_KEY_BK_1`, `OPENAI_TEXT_MODEL_BK_1` | Fallback gateway |
+| `AHREFS_API_KEY` | Optional. Ahrefs key for Fetch DR (can also be set in Settings) |
 
 `.env` is looked up in this order (first value wins): `%APPDATA%\BacklinkBuilder\.env`, next to `BacklinkBuilder.exe`,
 the app folder, the working directory. For the installed app, put `.env` in `%APPDATA%\BacklinkBuilder\`.

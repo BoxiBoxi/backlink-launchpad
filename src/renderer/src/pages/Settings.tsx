@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Bot, Globe, KeyRound, Save, Timer } from 'lucide-react'
+import { BarChart3, Bot, Globe, KeyRound, Save, Timer } from 'lucide-react'
 import type { SettingsInput } from '@shared/types'
 import type { PageProps } from '../App'
 import { invoke, useAction, useQuery, useToast } from '../lib'
@@ -7,7 +7,7 @@ import { Badge, Button, Card, Field, Input, PageHeader } from '../components/ui'
 
 export default function SettingsPage(_: PageProps) {
   const settings = useQuery('settings:get')
-  const [form, setForm] = useState<Required<SettingsInput>>({ bravePath: '', linkCheckIntervalHours: 24, aiEndpoint: '', aiModel: '', aiApiKey: '' })
+  const [form, setForm] = useState<Required<SettingsInput>>({ bravePath: '', linkCheckIntervalHours: 24, aiEndpoint: '', aiModel: '', aiApiKey: '', ahrefsApiKey: '' })
   const [touched, setTouched] = useState<Set<keyof SettingsInput>>(new Set())
   const { busy, run } = useAction()
   const toast = useToast()
@@ -19,7 +19,8 @@ export default function SettingsPage(_: PageProps) {
       linkCheckIntervalHours: settings.data.linkCheckIntervalHours,
       aiEndpoint: settings.data.aiEndpoint,
       aiModel: settings.data.aiModel,
-      aiApiKey: ''
+      aiApiKey: '',
+      ahrefsApiKey: ''
     })
     setTouched(new Set())
   }, [settings.data])
@@ -80,6 +81,20 @@ export default function SettingsPage(_: PageProps) {
               Test connection
             </Button>
           </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 font-semibold text-gray-900"><BarChart3 className="size-4" />Ahrefs (Domain Rating)</div>
+            {s && <Badge tone={s.ahrefsKeySet ? 'green' : 'gray'}>{s.ahrefsKeySet ? 'key configured' : 'no key'}</Badge>}
+          </div>
+          <p className="mb-4 text-sm text-gray-500">Used by Site catalog, Fetch DR (free DR endpoint, 0 API units). Defaults to AHREFS_API_KEY in .env.</p>
+          <Field label="API key override" hint="Leave empty to keep the current key. Stored locally in the app database.">
+            <div className="relative">
+              <KeyRound className="absolute left-3 top-2.5 size-4 text-gray-400" />
+              <Input type="password" className="pl-9" value={form.ahrefsApiKey} onChange={(e) => set('ahrefsApiKey', e.target.value)} />
+            </div>
+          </Field>
         </Card>
 
         <Card className="p-6">

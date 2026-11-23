@@ -45,6 +45,10 @@ export function aiGateways(): AiGateway[] {
   return gatewaysFromEnv(env)
 }
 
+export function ahrefsKey(): string {
+  return settingsRepo.get('ahrefsApiKey') || process.env.AHREFS_API_KEY?.trim() || ''
+}
+
 export function aiTimeoutMs(): number {
   const v = parseInt(process.env.OPENAI_TIMEOUT_MS || '', 10)
   return Number.isFinite(v) && v > 0 ? v : 120000
@@ -58,7 +62,8 @@ export function getSettings(): Settings {
     linkCheckIntervalHours: Number(settingsRepo.get('linkCheckIntervalHours') || 24),
     aiEndpoint: gws[0]?.url || '',
     aiModel: gws[0] ? gws[0].models.join(' | ') : parseModelList(process.env.OPENAI_TEXT_MODEL).join(' | '),
-    aiApiKeySet: gws.length > 0
+    aiApiKeySet: gws.length > 0,
+    ahrefsKeySet: !!ahrefsKey()
   }
 }
 
@@ -73,7 +78,8 @@ export function saveSettings(input: SettingsInput): Settings {
   for (const [field, key] of [
     ['aiEndpoint', 'aiEndpoint'],
     ['aiModel', 'aiModel'],
-    ['aiApiKey', 'aiApiKey']
+    ['aiApiKey', 'aiApiKey'],
+    ['ahrefsApiKey', 'ahrefsApiKey']
   ] as const) {
     const v = input[field]
     if (v === undefined) continue

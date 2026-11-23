@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react'
-import { Activity, ExternalLink, Pencil, Plus, Search, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { Activity, BarChart3, ExternalLink, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import type { Site, SiteInput } from '@shared/types'
 import type { PageProps } from '../App'
 import { fmtDate, invoke, useAction, useQuery, useToast } from '../lib'
-import { Badge, Button, Card, Dropdown, Field, Input, ListInput, Modal, PageHeader, Textarea, Toggle } from '../components/ui'
-import { AliveBadge, LangBadge, LinkTypeBadge, PriorityScore, SiteCell, TYPE_OPTIONS, TypeBadge } from '../components/site'
+import { Badge, Button, Card, Dropdown, Field, Input, ListInput, Menu, Modal, PageHeader, Textarea, Toggle } from '../components/ui'
+import { AliveBadge, DrValue, LangBadge, LinkTypeBadge, PriorityScore, SiteCell, TYPE_OPTIONS, TypeBadge } from '../components/site'
 
 // Site visuals live in components/site.tsx; re-exported for older imports.
 export { LinkTypeBadge, TYPE_OPTIONS, typeLabel } from '../components/site'
@@ -33,6 +33,9 @@ export default function Catalog(_: PageProps) {
   const [type, setType] = useState<string>('all')
   const [lang, setLang] = useState<string>('all')
   const [tier, setTier] = useState<string>('all')
+  const [sort, setSort] = useState<'priority' | 'dr'>('priority')
+  const [drProgress, setDrProgress] = useState<{ done: number; total: number } | null>(null)
+  useEffect(() => window.api.onEvent((e) => e.type === 'drProgress' && setDrProgress({ done: e.done, total: e.total })), [])
   const [editing, setEditing] = useState<(SiteInput & { id?: number }) | null>(null)
   const { busy, run } = useAction()
   const toast = useToast()
@@ -45,16 +48,33 @@ export default function Catalog(_: PageProps) {
           (lang === 'all' || s.language === lang) &&
           (tier === 'all' || (tier === 'high' ? s.priority >= 70 : tier === 'mid' ? s.priority >= 40 && s.priority < 70 : s.priority < 40)) &&
           (!q || `${s.name} ${s.url} ${s.topics.join(' ')}`.toLowerCase().includes(q.toLowerCase()))
-      ),
-    [sites.data, q, type, lang, tier]
+      )
+        .sort((a, b) => (sort === 'dr' ? (b.dr ?? -1) - (a.dr ?? -1) || b.priority - a.priority : 0)),
+    [sites.data, q, type, lang, tier, sort]
   )
+
+  const fetchDr = async (force: boolean) => {
+    const ids = shown.map((s) => s.id)
+    setDrProgress({ done: 0, total: 0 })
+    const r = await run('dr', () => invoke('sites:fetchDr', { ids, force }))
+    setDrProgress(null)
+    if (r) {
+      sites.reload()
+      toast(r.error ? 'error' : 'ok', `DR: ${r.updated} site(s) updated from ${r.domains} domain(s)${r.failed ? `, ${r.failed} without DR` : ''}${r.skipped ? `, ${r.skipped} skipped (already had DR)` : ''}.${r.error ? `
+${r.error}` : ''}`)
+    }
+  }
 
   const checkAll = async () => {
     const res = await run('check', () => invoke('sites:check', shown.map((s) => s.id)))
     if (res) {
       const down = res.filter((r) => r.alive === 'down').length
+      const unreachable = res.filter((r) => r.alive === 'unreachable').length
       sites.reload()
-      toast('ok', `Checked ${res.length} sites: ${res.length - down} up, ${down} down`)
+      toast(
+        'ok',
+        `Checked ${res.length} sites: ${res.length - down - unreachable} up, ${down} down${unreachable ? `, ${unreachable} unreachable from your network (blocked or failing here, not necessarily dead)` : ''}`
+      )
     }
   }
 
@@ -81,6 +101,20 @@ export default function Catalog(_: PageProps) {
         subtitle={`${sites.data?.length ?? 0} places to publish. Link type stays "unknown" until a placed link is verified.`}
         actions={
           <>
+            {busy === 'dr' ? (
+              <Button icon={<BarChart3 className="size-4" />} loading>
+                Fetching DR {drProgress?.total ? `${drProgress.done}/${drProgress.total}` : ''}
+              </Button>
+            ) : (
+              <Menu
+                label="Fetch DR"
+                icon={<BarChart3 className="size-4" />}
+                items={[
+                  { label: 'Sites without DR', hint: String(shown.filter((s) => s.dr === null).length), disabled: !shown.filter((s) => s.dr === null).length, onClick: () => fetchDr(false) },
+                  { label: 'Refresh all shown', hint: String(shown.length), disabled: !shown.length, onClick: () => fetchDr(true) }
+                ]}
+              />
+            )}
             <Button icon={<Activity className="size-4" />} loading={busy === 'check'} onClick={checkAll}>Check {shown.length} alive</Button>
             <Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing({ ...blank })}>Add site</Button>
           </>
@@ -93,6 +127,7 @@ export default function Catalog(_: PageProps) {
         </div>
         <Dropdown className="w-48" value={type} onChange={setType} options={[{ value: 'all', label: 'All types' }, ...TYPE_OPTIONS]} />
         <Dropdown className="w-44" value={tier} onChange={setTier} options={[{ value: 'all', label: 'All priorities' }, { value: 'high', label: 'High (70+)' }, { value: 'mid', label: 'Medium (40-69)' }, { value: 'low', label: 'Low (<40)' }]} />
+        <Dropdown className="w-40" value={sort} onChange={setSort} options={[{ value: 'priority', label: 'Sort: Priority' }, { value: 'dr', label: 'Sort: DR' }]} />
         <Dropdown className="w-40" value={lang} onChange={setLang} options={[{ value: 'all', label: 'All languages' }, { value: 'en', label: 'English' }, { value: 'vi', label: 'Vietnamese' }]} />
       </div>
       <Card className="overflow-x-auto">
@@ -123,10 +158,10 @@ export default function Catalog(_: PageProps) {
                 </td>
                 <td className="px-3 py-3"><TypeBadge type={s.type} /></td>
                 <td className="px-3 py-3"><LangBadge lang={s.language} /></td>
-                <td className="px-3 py-3 tabular-nums text-gray-700">{s.dr ?? <span className="text-gray-300">-</span>}</td>
+                <td className="px-3 py-3"><DrValue dr={s.dr} checkedAt={s.drCheckedAt} /></td>
                 <td className="px-3 py-3"><LinkTypeBadge type={s.linkType} /></td>
                 <td className="whitespace-nowrap px-3 py-3">
-                  <AliveBadge alive={s.alive} httpStatus={s.httpStatus} title={s.lastCheckedAt ? `Checked ${fmtDate(s.lastCheckedAt)}` : 'Never checked'} />
+                  <AliveBadge alive={s.alive} httpStatus={s.httpStatus} error={s.checkError} title={s.lastCheckedAt ? `Checked ${fmtDate(s.lastCheckedAt)}` : 'Never checked'} />
                 </td>
                 <td className="px-3 py-3">
                   <div className="flex justify-end gap-1">

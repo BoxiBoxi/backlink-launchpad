@@ -45,8 +45,9 @@ export const siteRepo = {
     return toSite(r)
   },
   delete: (id: number) => getDb().delete(sites).where(eq(sites.id, id)).run(),
-  setAlive: (id: number, alive: Site['alive'], httpStatus: number | null) =>
-    getDb().update(sites).set({ alive, httpStatus, lastCheckedAt: nowIso() }).where(eq(sites.id, id)).run(),
+  setAlive: (id: number, alive: Site['alive'], httpStatus: number | null, checkError = '') =>
+    getDb().update(sites).set({ alive, httpStatus, checkError, lastCheckedAt: nowIso() }).where(eq(sites.id, id)).run(),
+  setDr: (id: number, dr: number) => getDb().update(sites).set({ dr, drCheckedAt: nowIso() }).where(eq(sites.id, id)).run(),
   setLinkType: (id: number, linkType: Site['linkType']) =>
     getDb().update(sites).set({ linkType }).where(eq(sites.id, id)).run()
 }

@@ -4,7 +4,8 @@ export type SiteType = 'directory' | 'ugc_blog' | 'community' | 'forum' | 'qa' |
 export type Lang = 'en' | 'vi'
 export type LinkType = 'dofollow' | 'nofollow' | 'ugc' | 'unknown'
 export type SiteStatus = 'active' | 'paused' | 'avoid'
-export type Alive = 'unknown' | 'up' | 'down'
+/** up: answers; down: gone (DNS, 404/410, 5xx); unreachable: blocked or failing from this network (refused, reset, TLS, timeout) */
+export type Alive = 'unknown' | 'up' | 'down' | 'unreachable'
 export type ContentFormat = 'markdown' | 'plain' | 'html'
 
 export interface Site {
@@ -15,7 +16,9 @@ export interface Site {
   type: SiteType
   language: Lang
   topics: string[]
+  /** Ahrefs Domain Rating (fetched or entered manually) */
   dr: number | null
+  drCheckedAt: string | null
   /** 0-100, higher = post here first */
   priority: number
   linkType: LinkType
@@ -27,10 +30,12 @@ export interface Site {
   status: SiteStatus
   alive: Alive
   httpStatus: number | null
+  /** Why the last alive check failed (network error or HTTP status) */
+  checkError: string
   lastCheckedAt: string | null
 }
 
-export type SiteInput = Omit<Site, 'id' | 'alive' | 'httpStatus' | 'lastCheckedAt'>
+export type SiteInput = Omit<Site, 'id' | 'alive' | 'httpStatus' | 'lastCheckedAt' | 'drCheckedAt' | 'checkError'>
 
 export interface TargetLink {
   url: string
@@ -124,6 +129,7 @@ export interface Settings {
   aiEndpoint: string
   aiModel: string
   aiApiKeySet: boolean
+  ahrefsKeySet: boolean
 }
 
 export interface SettingsInput {
@@ -133,6 +139,16 @@ export interface SettingsInput {
   aiModel?: string
   /** Only sent when the user types a new key; empty string clears the override. */
   aiApiKey?: string
+  /** Ahrefs API key override; empty string clears it (falls back to AHREFS_API_KEY in .env). */
+  ahrefsApiKey?: string
+}
+
+export interface DrScanResult {
+  domains: number
+  updated: number
+  failed: number
+  skipped: number
+  error?: string
 }
 
 export interface OpenResult {
@@ -164,6 +180,7 @@ export interface SessionStatus {
 export type AppEvent =
   | { type: 'session'; status: SessionStatus }
   | { type: 'autoPosted'; taskId: number; linkId: number; siteName: string; url: string }
+  | { type: 'drProgress'; done: number; total: number }
 
 /** Every IPC call the renderer can make: channel -> [args, result]. */
 export interface Api {
@@ -171,6 +188,8 @@ export interface Api {
   'sites:save': [[SiteInput & { id?: number }], Site]
   'sites:delete': [[number], void]
   'sites:check': [[number[] | null], SiteCheckResult[]]
+  /** Fetch Ahrefs DR for these sites (null = all). Without force, sites that already have a DR are skipped. */
+  'sites:fetchDr': [[{ ids: number[] | null; force?: boolean }], DrScanResult]
 
   'projects:list': [[], Project[]]
   'projects:save': [[ProjectInput & { id?: number }], Project]

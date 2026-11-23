@@ -91,13 +91,25 @@ export function LinkTypeBadge({ type }: { type: LinkType | string | null }) {
   return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ${tone}`}>{type}</span>
 }
 
-export function AliveBadge({ alive, httpStatus, title }: { alive: Alive; httpStatus: number | null; title?: string }) {
-  const dot = alive === 'up' ? 'bg-emerald-500' : alive === 'down' ? 'bg-red-500' : 'bg-gray-300'
-  const text = alive === 'up' ? 'text-emerald-700' : alive === 'down' ? 'text-red-600' : 'text-gray-400'
+const ALIVE_STYLE: Record<Alive, { dot: string; text: string; label: string }> = {
+  up: { dot: 'bg-emerald-500', text: 'text-emerald-700', label: 'up' },
+  down: { dot: 'bg-red-500', text: 'text-red-600', label: 'down' },
+  unreachable: { dot: 'bg-amber-400', text: 'text-amber-700', label: 'unreachable' },
+  unknown: { dot: 'bg-gray-300', text: 'text-gray-400', label: 'not checked' }
+}
+
+export function AliveBadge({ alive, httpStatus, error, title }: { alive: Alive; httpStatus: number | null; error?: string; title?: string }) {
+  const st = ALIVE_STYLE[alive] ?? ALIVE_STYLE.unknown
+  const hint =
+    alive === 'unreachable'
+      ? `Could not connect from this network (${error || 'network error'}). The site may be blocked by your ISP/firewall; try a VPN. Not necessarily dead.`
+      : alive === 'down'
+        ? `Site looks gone: ${error || 'error'}`
+        : ''
   return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${text}`} title={title}>
-      <span className={`size-2 rounded-full ${dot}`} />
-      {alive === 'unknown' ? 'not checked' : alive}
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${st.text}`} title={[hint, title].filter(Boolean).join(' · ')}>
+      <span className={`size-2 rounded-full ${st.dot}`} />
+      {st.label}
       {httpStatus ? <span className="text-gray-400">{httpStatus}</span> : null}
     </span>
   )
@@ -116,5 +128,16 @@ export function SiteCell({ site, sub, children }: { site: Pick<Site, 'url' | 'na
         {sub && <div className="truncate text-xs text-gray-400">{sub}</div>}
       </div>
     </div>
+  )
+}
+
+/** Ahrefs DR with a color scale (70+ strong, 40-69 medium, below 40 weak). */
+export function DrValue({ dr, checkedAt }: { dr: number | null; checkedAt?: string | null }) {
+  if (dr === null) return <span className="text-gray-300">-</span>
+  const tone = dr >= 70 ? 'text-gray-900 font-bold' : dr >= 40 ? 'text-gray-700 font-semibold' : 'text-gray-400 font-medium'
+  return (
+    <span className={`tabular-nums ${tone}`} title={checkedAt ? `Ahrefs DR, fetched ${new Date(checkedAt).toLocaleDateString()}` : 'DR (entered manually)'}>
+      {dr}
+    </span>
   )
 }

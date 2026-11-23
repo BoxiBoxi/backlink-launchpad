@@ -68,12 +68,21 @@ async function loadWithFetch(url: string): Promise<Loaded> {
   return { status: r.status, anchors: extractAnchorsFromHtml(r.html, r.finalUrl), metaNofollow: hasMetaNofollow(r.html), error: '' }
 }
 
-function aliveFromStatus(status: number | null): Alive {
-  if (status === null) return 'down'
+function aliveFromStatus(status: number): Alive {
   if (status === 404 || status === 410) return 'down'
   if (status >= 500 && status !== 503) return 'down'
-  return 'up' // 2xx/3xx, and 401/403/429/503 = server answers (often a bot wall)
+  return 'up' // 2xx/3xx, and 401/403/429/503/999 = server answers (often a bot wall)
 }
+
+/** Short reason for a network failure (fetch error cause or Chromium net:: error). */
+function networkReason(err: unknown): string {
+  const e = err as { cause?: { code?: string; message?: string }; message?: string }
+  const net = String(e?.message || '').match(/net::(ERR_[A-Z_]+)/)
+  return e?.cause?.code || (net ? net[1] : '') || String(e?.cause?.message || e?.message || err).split(/\r?\n/)[0].slice(0, 120)
+}
+
+/** DNS failures mean the domain is gone; other network errors usually mean blocked from this network. */
+const isDnsFailure = (reason: string) => /ENOTFOUND|ERR_NAME_NOT_RESOLVED/.test(reason)
 
 export async function checkSites(ids: number[] | null): Promise<SiteCheckResult[]> {
   const all = siteRepo.list()
@@ -81,28 +90,32 @@ export async function checkSites(ids: number[] | null): Promise<SiteCheckResult[
   return withHeadless(getBravePath(), async (browser) =>
     pool(targets, 4, async (site): Promise<SiteCheckResult> => {
       let status: number | null = null
-      let error: string | undefined
+      let reason = ''
       try {
         status = (await fetchPage(site.url)).status
       } catch (err) {
-        error = err instanceof Error ? err.message : String(err)
+        reason = networkReason(err)
       }
       // Bot walls or fetch failure: confirm with a real browser.
       if (browser && (status === null || status === 403 || status === 429 || status === 503)) {
+        const ctx = await browser.newContext()
         try {
-          const ctx = await browser.newContext()
           const page = await ctx.newPage()
           const res = await page.goto(site.url, { waitUntil: 'domcontentloaded', timeout: 30000 })
-          status = res?.status() ?? status
-          error = undefined
-          await ctx.close()
+          if (res) {
+            status = res.status()
+            reason = ''
+          }
         } catch (err) {
-          error = err instanceof Error ? err.message.split('\n')[0] : String(err)
+          if (status === null) reason = networkReason(err)
+        } finally {
+          await ctx.close().catch(() => undefined)
         }
       }
-      const alive = aliveFromStatus(status)
-      siteRepo.setAlive(site.id, alive, status)
-      return { siteId: site.id, alive, httpStatus: status, error }
+      const alive: Alive = status !== null ? aliveFromStatus(status) : isDnsFailure(reason) ? 'down' : 'unreachable'
+      const checkError = status !== null ? (alive === 'up' ? '' : `HTTP ${status}`) : reason
+      siteRepo.setAlive(site.id, alive, status, checkError)
+      return { siteId: site.id, alive, httpStatus: status, error: checkError || undefined }
     })
   )
 }
