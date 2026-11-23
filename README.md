@@ -56,9 +56,17 @@ Endpoint, models and key can also be overridden in **Settings** (stored in the l
 
 ## Data
 
-SQLite (`better-sqlite3` + Drizzle ORM) at `%APPDATA%\BacklinkBuilder\backlinkbuilder.db`. Tables are created on start;
-new catalog seeds are merged by hostname when `CATALOG_VERSION` in `src/core/catalogSeed.ts` is bumped.
-Set `BB_USER_DATA=<dir>` to run with an isolated data folder (used for tests).
+Everything the app stores (SQLite DB, Brave profile with cookies, generated media) lives in one data folder:
+
+| How the app runs | Data folder |
+| --- | --- |
+| `pnpm dev` | `<project>\data` (gitignored: it contains login cookies, never commit or share it) |
+| Installed app | `%APPDATA%\BacklinkBuilder` |
+| `BB_USER_DATA=<dir>` set | that folder (used for tests) |
+
+SQLite uses `better-sqlite3` + Drizzle ORM (`backlinkbuilder.db`). Tables are created on start; new catalog seeds are
+merged by hostname when `CATALOG_VERSION` in `src/core/catalogSeed.ts` is bumped. Back up the data folder to keep
+projects, links and Brave logins.
 
 ## Scripts
 
