@@ -1,21 +1,40 @@
-appId: com.aiktp.backlinkbuilder
-productName: BacklinkBuilder
+appId: com.wriai.backlinklaunchpad
+productName: Backlink Launchpad
+copyright: Copyright © 2026 Wriai
 directories:
   output: release
   buildResources: build
 files:
   - out/**
   - package.json
+  - "!out/test/**"
   - "!**/*.map"
 asarUnpack:
   - "**/*.node"
+npmRebuild: true
+publish: null
+
 win:
   target:
     - target: nsis
       arch: [x64]
-  artifactName: ${productName}-Setup-${version}.${ext}
+  artifactName: Backlink-Launchpad-Setup-${version}.${ext}
 nsis:
   oneClick: false
   allowToChangeInstallationDirectory: true
   perMachine: false
-npmRebuild: true
+  shortcutName: Backlink Launchpad
+
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  artifactName: Backlink-Launchpad-${version}-${arch}.${ext}
+
+linux:
+  category: Office
+  target:
+    - target: AppImage
+      arch: [x64]
+  artifactName: Backlink-Launchpad-${version}-${arch}.${ext}

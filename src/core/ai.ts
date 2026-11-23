@@ -23,6 +23,16 @@ export interface ChatResult {
   content: string
   model: string
   gateway: string
+  /** Wriai API only: credits charged for this call and balance left (from response headers or body). */
+  credits?: { charged: number | null; remaining: number | null }
+}
+
+/** Wriai's OpenAI-compatible AI endpoint (see docs/wriai-ai-api.md). Paid in Wriai credits. */
+export const WRIAI_API_BASE = 'https://wriai.com/api/v1/ai'
+export const WRIAI_MODEL = 'wriai-auto'
+
+export function wriaiGateway(apiKey: string, base = WRIAI_API_BASE): AiGateway {
+  return { name: 'wriai', url: base, key: apiKey.trim(), models: [WRIAI_MODEL] }
 }
 
 export function parseModelList(value: string | undefined, fallback: string[] = []): string[] {
@@ -65,7 +75,7 @@ class HttpError extends Error {
   }
 }
 
-async function postChat(gw: AiGateway, payload: Record<string, unknown>, timeoutMs: number): Promise<string> {
+async function postChat(gw: AiGateway, payload: Record<string, unknown>, timeoutMs: number): Promise<{ content: string; credits?: ChatResult['credits'] }> {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
@@ -81,13 +91,20 @@ async function postChat(gw: AiGateway, payload: Record<string, unknown>, timeout
       try {
         detail = JSON.parse(text)?.error?.message || text
       } catch {
-        /* keep text */
+        // A web page instead of JSON: the URL is not an API endpoint (wrong base URL, or not deployed yet).
+        if (/^\s*</.test(text)) detail = `no API endpoint at ${gw.url.replace(/\/$/, '')}/chat/completions (the server returned a web page)`
       }
       throw new HttpError(res.status, detail)
     }
     const json = JSON.parse(text)
     const msg = json?.choices?.[0]?.message
-    return (msg?.content || msg?.reasoning_content || '').toString()
+    const num = (v: unknown) => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v))
+    const charged = num(res.headers.get('x-wriai-credits-charged') ?? json?.wriai?.credits_charged)
+    const remaining = num(res.headers.get('x-wriai-credits-remaining') ?? json?.wriai?.credits_remaining)
+    return {
+      content: (msg?.content || msg?.reasoning_content || '').toString(),
+      credits: charged !== null || remaining !== null ? { charged, remaining } : undefined
+    }
   } catch (err) {
     if (controller.signal.aborted) throw new Error(`timeout after ${timeoutMs}ms`)
     throw err
@@ -140,12 +157,15 @@ export async function chat(gateways: AiGateway[], opts: ChatOptions): Promise<Ch
       }
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const content = await postChat(gw, payload, timeoutMs)
-          if (content.trim().length > 0) return { content, model, gateway: gw.name }
+          const { content, credits } = await postChat(gw, payload, timeoutMs)
+          if (content.trim().length > 0) return { content, model, gateway: gw.name, credits }
           errors.push(`${gw.name}/${model}: empty response`)
           break
         } catch (err) {
           if (err instanceof HttpError && err.status === 400 && relaxParams(payload, err.detail, maxTokens)) continue
+          if (err instanceof HttpError && err.status === 402) {
+            throw new Error(`Not enough credits on ${gw.name === 'wriai' ? 'your Wriai account (top up at https://wriai.com/dashboard/billing)' : gw.name}: ${err.detail.slice(0, 200)}`)
+          }
           errors.push(`${gw.name}/${model}: ${err instanceof Error ? err.message : String(err)}`)
           if (err instanceof HttpError && err.status === 401) break
           break

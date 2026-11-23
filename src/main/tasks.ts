@@ -8,7 +8,7 @@ import { openForPosting } from './browser'
 
 export function requireBrave(): string {
   const p = getBravePath()
-  if (!p) throw new Error('Brave was not found. Install Brave or set its path in Settings.')
+  if (!p) throw new Error('No browser found. Install Brave (recommended), Chrome or Edge, or set the browser path in Settings.')
   return p
 }
 

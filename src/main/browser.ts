@@ -4,16 +4,52 @@
 // - Checks (site alive, link monitor) use a separate headless Brave instance without the profile.
 import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
+import { homedir } from 'node:os'
 import { spawn } from 'node:child_process'
 import { chromium, type Browser, type BrowserContext, type Frame, type Page } from 'playwright-core'
 
-export function detectBrave(): string | null {
-  const roots = [process.env['ProgramFiles'], process.env['ProgramFiles(x86)'], process.env['LOCALAPPDATA']].filter(Boolean) as string[]
-  for (const root of roots) {
-    const p = join(root, 'BraveSoftware', 'Brave-Browser', 'Application', 'brave.exe')
-    if (existsSync(p)) return p
+/** Candidate browser executables per OS: Brave first (recommended), then Chrome and Edge as fallbacks. */
+function browserCandidates(): string[] {
+  if (process.platform === 'win32') {
+    const roots = [process.env['ProgramFiles'], process.env['ProgramFiles(x86)'], process.env['LOCALAPPDATA']].filter(Boolean) as string[]
+    const rel = [
+      ['BraveSoftware', 'Brave-Browser', 'Application', 'brave.exe'],
+      ['Google', 'Chrome', 'Application', 'chrome.exe'],
+      ['Microsoft', 'Edge', 'Application', 'msedge.exe']
+    ]
+    return rel.flatMap((parts) => roots.map((root) => join(root, ...parts)))
   }
-  return null
+  if (process.platform === 'darwin') {
+    const apps = [
+      'Brave Browser.app/Contents/MacOS/Brave Browser',
+      'Google Chrome.app/Contents/MacOS/Google Chrome',
+      'Microsoft Edge.app/Contents/MacOS/Microsoft Edge'
+    ]
+    return apps.flatMap((a) => [join('/Applications', a), join(homedir(), 'Applications', a)])
+  }
+  return [
+    '/usr/bin/brave-browser',
+    '/usr/bin/brave',
+    '/usr/bin/brave-browser-stable',
+    '/opt/brave.com/brave/brave',
+    '/snap/bin/brave',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/microsoft-edge',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser'
+  ]
+}
+
+/** First installed browser (Brave preferred). */
+export function detectBrave(): string | null {
+  return browserCandidates().find((p) => existsSync(p)) ?? null
+}
+
+export function browserName(path: string | null): string {
+  if (!path) return 'none'
+  const p = path.toLowerCase()
+  return p.includes('brave') ? 'Brave' : p.includes('edge') ? 'Microsoft Edge' : p.includes('chrom') ? 'Chrome' : 'Chromium'
 }
 
 let postingCtx: BrowserContext | null = null

@@ -2,9 +2,9 @@ import { BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron'
 import type { Api, Channel, OpenResult } from '@shared/types'
 import { chat } from '@core/ai'
 import { generateContent } from '@core/contentGen'
-import { contentRepo, linkRepo, projectRepo, siteRepo, taskRepo } from './repo'
-import { aiGateways, aiTimeoutMs, getBravePath, getSettings, profileDir, saveSettings } from './config'
-import { closePostingBrowser, currentPostingUrl, isPostingBrowserRunning, openProfileForLogin } from './browser'
+import { contentRepo, linkRepo, projectRepo, settingsRepo, siteRepo, taskRepo } from './repo'
+import { aiGateways, aiProvider, aiTimeoutMs, getBravePath, getSettings, profileDir, saveSettings } from './config'
+import { browserName, closePostingBrowser, currentPostingUrl, isPostingBrowserRunning, openProfileForLogin } from './browser'
 import { markPosted, openTask, requireBrave, undoPosted } from './tasks'
 import { nextInSession, onTaskPostedManually, sessionStatus, startSession, stopSession } from './session'
 import { exportContentPdf } from './pdf'
@@ -64,7 +64,7 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
     if (!url) throw new Error('Add a target URL to the project first')
     const anchorText = anchor ?? target?.anchors[Math.floor(Math.random() * Math.max(1, target.anchors.length))] ?? project.name
     const gen = await generateContent(aiGateways(), { project, site, linkUrl: url, anchor: anchorText || project.name, extra }, aiTimeoutMs())
-    return contentRepo.insert({
+    const saved = contentRepo.insert({
       projectId,
       siteId,
       title: gen.title,
@@ -75,6 +75,7 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
       model: gen.model,
       status: 'draft'
     })
+    return { ...saved, creditsRemaining: gen.credits?.remaining ?? undefined }
   })
   handle('content:save', (c) => contentRepo.update(c))
   handle('content:delete', (id) => void contentRepo.delete(id))
@@ -139,12 +140,34 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
   handle('browser:status', () => ({ bravePath: getBravePath(), running: isPostingBrowserRunning() }))
 
   // settings & misc
+  handle('setup:status', () => {
+    const browserPath = getBravePath()
+    return {
+      done: settingsRepo.get('setupDone') === '1',
+      hasProjects: projectRepo.list().length > 0,
+      platform: process.platform,
+      browserPath,
+      browserName: browserName(browserPath),
+      aiReady: aiGateways().length > 0
+    }
+  })
+  handle('setup:complete', () => void settingsRepo.set('setupDone', '1'))
   handle('settings:get', () => getSettings())
   handle('settings:save', (input) => saveSettings(input))
   handle('ai:test', async () => {
     try {
-      const r = await chat(aiGateways(), { system: 'Reply with the single word OK.', user: 'ping', maxTokens: 200, timeoutMs: 60000 })
-      return { ok: true, model: r.model, message: `Connected via ${r.gateway} (${r.model})` }
+      const gws = aiGateways()
+      if (!gws.length) {
+        return { ok: false, message: aiProvider() === 'wriai' ? 'Add your Wriai API key first.' : 'No OpenAI-compatible key configured.' }
+      }
+      const r = await chat(gws, { system: 'Reply with the single word OK.', user: 'ping', maxTokens: 200, timeoutMs: 60000 })
+      const left = r.credits?.remaining
+      return {
+        ok: true,
+        model: r.model,
+        creditsRemaining: left,
+        message: `Connected via ${r.gateway} (${r.model})${typeof left === 'number' ? ` · ${left.toLocaleString()} credits left` : ''}`
+      }
     } catch (err) {
       return { ok: false, message: err instanceof Error ? err.message : String(err) }
     }

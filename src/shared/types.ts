@@ -122,7 +122,11 @@ export interface ProjectStats {
   drafts: number
 }
 
+export type AiProvider = 'wriai' | 'custom'
+
 export interface Settings {
+  aiProvider: AiProvider
+  wriaiKeySet: boolean
   bravePath: string
   profileDir: string
   linkCheckIntervalHours: number
@@ -132,7 +136,20 @@ export interface Settings {
   ahrefsKeySet: boolean
 }
 
+export interface SetupStatus {
+  /** true once the user finished or skipped the first-run guide */
+  done: boolean
+  hasProjects: boolean
+  platform: string
+  browserPath: string | null
+  browserName: string
+  aiReady: boolean
+}
+
 export interface SettingsInput {
+  aiProvider?: AiProvider
+  /** Wriai API key (wri_live_...); empty string clears it */
+  wriaiApiKey?: string
   bravePath?: string
   linkCheckIntervalHours?: number
   aiEndpoint?: string
@@ -199,7 +216,7 @@ export interface Api {
   'projects:pickImages': [[], string[]]
 
   'content:list': [[number | null], Content[]]
-  'content:generate': [[{ projectId: number; siteId: number; linkUrl?: string; anchor?: string; extra?: string }], Content]
+  'content:generate': [[{ projectId: number; siteId: number; linkUrl?: string; anchor?: string; extra?: string }], Content & { creditsRemaining?: number | null }]
   'content:save': [[Pick<Content, 'id' | 'title' | 'body' | 'tags' | 'linkUrl' | 'anchor' | 'status'>], Content]
   'content:delete': [[number], void]
   /** bodyHtml: sanitized HTML of the body (rendered by the renderer). Returns the saved path, or null if cancelled. */
@@ -230,9 +247,11 @@ export interface Api {
   'browser:close': [[], void]
   'browser:status': [[], { bravePath: string | null; running: boolean }]
 
+  'setup:status': [[], SetupStatus]
+  'setup:complete': [[], void]
   'settings:get': [[], Settings]
   'settings:save': [[SettingsInput], Settings]
-  'ai:test': [[], { ok: boolean; model?: string; message: string }]
+  'ai:test': [[], { ok: boolean; model?: string; message: string; creditsRemaining?: number | null }]
   'clipboard:write': [[string], void]
   'shell:openExternal': [[string], void]
 }

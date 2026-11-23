@@ -114,7 +114,7 @@ export default function ContentPage({ projectId, go }: PageProps) {
     const c = await run(
       'gen',
       () => invoke('content:generate', { projectId, siteId, linkUrl: linkUrl || undefined, anchor: anchor || undefined, extra: extra || undefined }),
-      (r) => `Generated with ${r.model}`
+      (r) => `Generated with ${r.model}${typeof r.creditsRemaining === 'number' ? ` · ${r.creditsRemaining.toLocaleString()} Wriai credits left` : ''}`
     )
     if (c) {
       contents.reload()

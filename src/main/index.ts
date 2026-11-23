@@ -15,7 +15,7 @@ import { handleFavicon } from './favicon'
 //   - BB_USER_DATA=C:\some\dir    explicit override (tests)
 //   - dev (pnpm dev)              <project>\data  (gitignored: contains login cookies)
 //   - installed app               %APPDATA%\BacklinkBuilder
-app.setName('BacklinkBuilder')
+app.setName('Backlink Launchpad')
 const devDataDir = join(__dirname, '..', '..', 'data') // out/main -> project root
 app.setPath(
   'userData',
@@ -39,7 +39,8 @@ function createWindow() {
     minHeight: 700,
     show: false,
     backgroundColor: '#F6F8FA',
-    title: 'BacklinkBuilder',
+    title: 'Backlink Launchpad',
+    icon: app.isPackaged ? undefined : join(__dirname, '../../build/icon.png'),
     autoHideMenuBar: true,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),

@@ -96,7 +96,7 @@ export default function Queue({ projectId, go }: PageProps) {
   }
 
   const generate = async (t: Task) => {
-    const c = await run(`gen-${t.id}`, () => invoke('content:generate', { projectId, siteId: t.siteId }), (r) => `Generated with ${r.model}`)
+    const c = await run(`gen-${t.id}`, () => invoke('content:generate', { projectId, siteId: t.siteId }), (r) => `Generated with ${r.model}${typeof r.creditsRemaining === 'number' ? ` · ${r.creditsRemaining.toLocaleString()} Wriai credits left` : ''}`)
     if (c) {
       await invoke('tasks:update', { id: t.id, contentId: c.id })
       reloadAll()
@@ -112,7 +112,7 @@ export default function Queue({ projectId, go }: PageProps) {
         actions={
           <>
             <Button icon={<LogIn className="size-4" />} onClick={() => run('login', () => invoke('browser:openProfile', null), 'Brave opened on the BacklinkBuilder profile. Sign in to sites, then close that window before opening tasks.')}>
-              Brave login window
+              Login window
             </Button>
             <Button icon={<X className="size-4" />} onClick={() => run('close', () => invoke('browser:close'), 'Automated Brave closed')}>Close Brave</Button>
             <Button icon={<Plus className="size-4" />} onClick={() => { setPicked([]); setAdding(true) }}>Add sites</Button>

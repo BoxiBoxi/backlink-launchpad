@@ -3,10 +3,10 @@ import { app } from 'electron'
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import dotenv from 'dotenv'
-import { gatewaysFromEnv, parseModelList, type AiGateway } from '@core/ai'
+import { gatewaysFromEnv, parseModelList, wriaiGateway, WRIAI_API_BASE, type AiGateway } from '@core/ai'
 import { settingsRepo } from './repo'
 import { detectBrave } from './browser'
-import type { Settings, SettingsInput } from '@shared/types'
+import type { AiProvider, Settings, SettingsInput } from '@shared/types'
 
 /** .env lookup order: userData, next to the exe (packaged), project root (dev). First file wins per variable. */
 export function loadEnv(): string[] {
@@ -34,7 +34,7 @@ export function getBravePath(): string | null {
   return detectBrave()
 }
 
-export function aiGateways(): AiGateway[] {
+function customGateways(): AiGateway[] {
   const env = { ...process.env }
   const endpoint = settingsRepo.get('aiEndpoint')
   const model = settingsRepo.get('aiModel')
@@ -43,6 +43,25 @@ export function aiGateways(): AiGateway[] {
   if (model) env.OPENAI_TEXT_MODEL = model
   if (key) env.OPENAI_API_KEY = key
   return gatewaysFromEnv(env)
+}
+
+export function wriaiKey(): string {
+  return settingsRepo.get('wriaiApiKey') || process.env.WRIAI_API_KEY?.trim() || ''
+}
+
+/** Wriai is the default for new users; existing setups with an OpenAI-compatible key keep "custom". */
+export function aiProvider(): AiProvider {
+  const saved = settingsRepo.get('aiProvider')
+  if (saved === 'wriai' || saved === 'custom') return saved
+  return customGateways().length && !wriaiKey() ? 'custom' : 'wriai'
+}
+
+export function aiGateways(): AiGateway[] {
+  if (aiProvider() === 'wriai') {
+    const key = wriaiKey()
+    return key ? [wriaiGateway(key, process.env.WRIAI_API_BASE || WRIAI_API_BASE)] : []
+  }
+  return customGateways()
 }
 
 export function ahrefsKey(): string {
@@ -55,8 +74,10 @@ export function aiTimeoutMs(): number {
 }
 
 export function getSettings(): Settings {
-  const gws = aiGateways()
+  const gws = customGateways()
   return {
+    aiProvider: aiProvider(),
+    wriaiKeySet: !!wriaiKey(),
     bravePath: getBravePath() || '',
     profileDir: profileDir(),
     linkCheckIntervalHours: Number(settingsRepo.get('linkCheckIntervalHours') || 24),
@@ -75,11 +96,13 @@ export function saveSettings(input: SettingsInput): Settings {
   if (input.linkCheckIntervalHours !== undefined) {
     settingsRepo.set('linkCheckIntervalHours', String(Math.max(1, Math.round(input.linkCheckIntervalHours))))
   }
+  if (input.aiProvider) settingsRepo.set('aiProvider', input.aiProvider)
   for (const [field, key] of [
     ['aiEndpoint', 'aiEndpoint'],
     ['aiModel', 'aiModel'],
     ['aiApiKey', 'aiApiKey'],
-    ['ahrefsApiKey', 'ahrefsApiKey']
+    ['ahrefsApiKey', 'ahrefsApiKey'],
+    ['wriaiApiKey', 'wriaiApiKey']
   ] as const) {
     const v = input[field]
     if (v === undefined) continue

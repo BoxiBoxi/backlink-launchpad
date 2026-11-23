@@ -17,6 +17,7 @@ export interface GeneratedContent {
   body: string
   tags: string[]
   model: string
+  credits?: { charged: number | null; remaining: number | null }
 }
 
 const TYPE_GUIDE: Record<Site['type'], string> = {
@@ -104,6 +105,7 @@ export async function generateContent(gateways: AiGateway[], input: GenerateInpu
     title: String(parsed.title || '').trim(),
     body: parsed.body.trim(),
     tags: Array.isArray(parsed.tags) ? parsed.tags.map(String).slice(0, 8) : [],
-    model: res.model
+    model: res.model,
+    credits: res.credits
   }
 }

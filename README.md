@@ -1,94 +1,133 @@
-# BacklinkBuilder
+<p align="center">
+  <img src="build/icon.png" width="96" alt="Backlink Launchpad logo" />
+</p>
 
-Windows desktop app (Electron) that manages backlink and promotion campaigns for several sites (Wriai, AIKTP, yupvox, ...).
-It is a **campaign manager and assisted poster, not a spam bot**: it writes drafts, opens the submit page in Brave and
-pre-fills what it can. You review, sign in, solve CAPTCHAs and click submit yourself. The app never auto-submits,
-never solves CAPTCHAs and never creates accounts.
+<h1 align="center">Backlink Launchpad</h1>
+<p align="center"><b>by <a href="https://wriai.com">Wriai</a></b> · plan, write and track launch posts and backlinks on 400+ directories and communities</p>
 
-## Features
+<p align="center">
+  <img src="docs/screenshots/catalog.png" width="860" alt="Site catalog with priority, DR and favicons" />
+</p>
 
-| Section | What it does |
+Backlink Launchpad is a free desktop app for founders and marketers who promote a product by listing it on directories,
+launch sites, blogs and communities. It is a **campaign manager and posting assistant, not a spam bot**: it prepares
+everything, and you review and click submit yourself.
+
+## What it does
+
+| | |
 | --- | --- |
-| Dashboard | Placed / live / dofollow links and pending tasks per project |
-| Projects | Brand profile: name, domain, tagline, short/long description, logo, screenshots/mockups, topics, target URLs with anchor texts. Logo and screenshots are attached to image upload fields when a task is opened |
-| Site catalog | 414 seeded targets (AI/SaaS directories, launch sites, UGC blogs, communities, forums, Q&A, profiles, 45 Vietnamese sites), each with a priority score 0-100 (relevance + authority + cost/effort + likely link value). Sorted by priority; filter by type, language, priority tier. Most submit URLs are unverified (`review` badge). Editable; "Check alive" probes each site. **Fetch DR** fills the DR column from Ahrefs (`AHREFS_API_KEY`, free `domain-rating-free` endpoint, 0 API units, by root domain); sort by DR. Alive check reports `down` (DNS gone, 404/410, 5xx) separately from `unreachable` (refused/reset/TLS/timeout from your network, often an ISP block) |
-| AI content | One unique post per (project, site), respecting the site's language, type, length, format and link rules. Editable. Editor follows the site format (HTML: WYSIWYG + source + preview; Markdown/plain: write + preview). **Export PDF** (optionally with screenshots) for document sites such as Yumpu, Issuu, Scribd |
-| Posting queue | **Open** a task: Brave goes to the submit page, fills title/body, attaches logo/screenshots, copies the body. **Start session** walks the open tasks by priority: after you submit, it detects the live post URL in Brave (`src/core/postDetect.ts`), saves it to the Link monitor (with Undo) and opens the next site. You still review, sign in, solve CAPTCHAs and click submit. Directories that only show a "pending review" page are not detected: use **Posted** or **Next site** |
-| Link monitor | Checks each placed link: page live, link present, `rel` (dofollow / nofollow / ugc / sponsored), anchor text. Re-checks automatically (interval in Settings) |
+| **Site catalog** | 414 places to publish: AI/SaaS directories, launch platforms, UGC blogs, communities, forums, Q&A (English and Vietnamese). Each has a priority score (0-100), Ahrefs DR (one click, free), type, language, link rules and an alive check. |
+| **Projects** | A brand profile per product: description, target URLs with anchor texts, logo and screenshots. |
+| **AI content** | A unique, value-first post per site, in that site's language, length and format (HTML, Markdown or plain text). WYSIWYG editor, preview and PDF export (for Yumpu, Issuu, Scribd, SlideShare). |
+| **Posting queue** | Opens each submit page in a separate browser profile, fills title and body, attaches logo and screenshots. **Start session** walks the queue by priority and saves the live post URL automatically when you publish (with Undo). |
+| **Link monitor** | Re-checks every placed link: page live, link present, `rel` (dofollow, nofollow, ugc, sponsored), anchor text. |
 
-Link type in the catalog stays `unknown` until a placed link on that site is verified; the first verified link sets it.
+## Responsible use
 
-## Setup
+The app **never submits a form, never solves a CAPTCHA and never creates an account**. You sign in, review every post,
+and press submit. Read each community's rules (most subreddits ban self-promotion), disclose that you are the maker,
+post value first, and spread posts out over time. Spammy posting gets accounts banned and hurts your domain.
 
-Requirements: Node 20+, pnpm 10, Brave browser.
+## Install
 
-```powershell
-pnpm install
-copy .env.example .env   # then fill in the values
-pnpm dev
-```
+1. Download the installer for your system from the [latest release](../../releases/latest):
+   - Windows: `Backlink-Launchpad-Setup-x.y.z.exe`
+   - macOS: `Backlink-Launchpad-x.y.z-arm64.dmg` (Apple silicon) or `-x64.dmg` (Intel)
+   - Linux: `Backlink-Launchpad-x.y.z-x86_64.AppImage`
+2. The builds are not code-signed yet:
+   - Windows SmartScreen: click **More info**, then **Run anyway**.
+   - macOS: right-click the app, choose **Open**, then **Open** again.
+   - Linux: `chmod +x Backlink-Launchpad-*.AppImage`, then run it.
+3. Install a Chromium browser if you do not have one. **Brave** is recommended; Chrome and Edge work too.
 
-### Environment variables
+## First run
 
-Same names as the Wriai project (OpenAI-compatible chat API):
+A setup guide opens on first launch (reopen it any time from **Setup guide** in the sidebar):
 
-| Variable | Meaning |
-| --- | --- |
-| `OPENAI_END_POINT` | Primary gateway base URL, e.g. `https://api.openai.com/v1` |
-| `OPENAI_API_KEY` | Primary key |
-| `OPENAI_TEXT_MODEL` | Models, `|` separated; first is primary, the rest are fallbacks |
-| `OPENAI_TIMEOUT_MS` | Request timeout (default 120000) |
-| `OPENAI_END_POINT_BK_1`, `OPENAI_API_KEY_BK_1`, `OPENAI_TEXT_MODEL_BK_1` | Fallback gateway |
-| `AHREFS_API_KEY` | Optional. Ahrefs key for Fetch DR (can also be set in Settings) |
+1. **Browser**: found automatically, or set its path.
+2. **AI writing**: choose one:
+   - **Wriai API** (recommended): paste the API key from your [Wriai account](https://wriai.com/dashboard/api-docs).
+     Generation is billed in Wriai credits by characters written. New Wriai accounts get free trial credits.
+   - **OpenAI-compatible**: your own endpoint, model and key (OpenAI, OpenRouter, a gateway or a local model).
+3. **Sign in** to the sites you will use, in the app's own browser profile. Logins are remembered.
+4. **Create a project**, add 10-30 high-priority sites to the queue, generate posts, and start a session.
 
-`.env` is looked up in this order (first value wins): `%APPDATA%\BacklinkBuilder\.env`, next to `BacklinkBuilder.exe`,
-the app folder, the working directory. For the installed app, put `.env` in `%APPDATA%\BacklinkBuilder\`.
-Endpoint, models and key can also be overridden in **Settings** (stored in the local database).
+Optional: add an Ahrefs API key in Settings to fill the DR column (uses the free DR endpoint, 0 API units).
 
-## Brave profile
+## Your data
 
-- Brave is auto-detected (`Program Files`, `Program Files (x86)`, `%LOCALAPPDATA%`); the path can be set in Settings.
-- The app uses a **dedicated profile** at `<data folder>\brave-profile` (see Data below), never your main Brave
-  profile. Cookies and logins persist there between runs.
-- First time: Posting queue -> **Brave login window**. This opens Brave on that profile *without* automation, so
-  Google/GitHub logins work normally. Sign in to the sites you plan to use, then close that window. Sessions persist.
-- **Open** on a task launches Brave on the same profile through Playwright. Only one Brave window can use the profile
-  at a time, so close the login window first. **Close Brave** closes the automated window.
-- Link and site checks use a separate headless Brave without the profile (falls back to plain HTTP if Brave is missing).
-
-## Data
-
-Everything the app stores (SQLite DB, Brave profile with cookies, generated media) lives in one data folder:
+Everything stays on your computer:
 
 | How the app runs | Data folder |
 | --- | --- |
-| `pnpm dev` | `<project>\data` (gitignored: it contains login cookies, never commit or share it) |
-| Installed app | `%APPDATA%\BacklinkBuilder` |
-| `BB_USER_DATA=<dir>` set | that folder (used for tests) |
+| Installed app | Windows `%APPDATA%\BacklinkBuilder`, macOS `~/Library/Application Support/BacklinkBuilder`, Linux `~/.config/BacklinkBuilder` |
+| `pnpm dev` | `<repo>/data` (gitignored) |
+| `BB_USER_DATA=<dir>` | that folder (used by tests) |
 
-SQLite uses `better-sqlite3` + Drizzle ORM (`backlinkbuilder.db`). Tables are created on start; new catalog seeds are
-merged by hostname when `CATALOG_VERSION` in `src/core/catalogSeed.ts` is bumped. Back up the data folder to keep
-projects, links and Brave logins.
+The folder holds the SQLite database, the browser profile with your logins (cookies) and cached favicons.
+Back it up to keep your projects; never share it, because it contains your sessions.
 
-## Scripts
+## Build from source
 
-```powershell
-pnpm dev         # Electron + Vite dev mode
-pnpm typecheck   # tsc --noEmit for main/preload/core and renderer
-pnpm test        # post URL detection table test
-pnpm build       # build + Windows NSIS installer in release/
-pnpm build:dir   # build + unpacked app only (release/win-unpacked)
+Requirements: Node 22+, pnpm 10.
+
+```bash
+pnpm install
+cp .env.example .env   # optional: keys for development
+pnpm dev               # run the app
+pnpm typecheck         # tsc for main/preload/core and renderer
+pnpm test              # post URL detection + catalog validation
+pnpm build:win         # or build:mac / build:linux -> installers in release/
 ```
+
+Pushing a tag like `v0.2.0` runs `.github/workflows/release.yml`, which builds all three platforms and attaches them to
+a draft GitHub Release.
+
+### Environment variables (optional, all can be set in the app instead)
+
+| Variable | Meaning |
+| --- | --- |
+| `WRIAI_API_KEY` | Wriai API key (`wri_live_...`) for the Wriai provider |
+| `WRIAI_API_BASE` | Override the Wriai AI endpoint (default `https://wriai.com/api/v1/ai`, see [docs/wriai-ai-api.md](docs/wriai-ai-api.md)) |
+| `OPENAI_END_POINT`, `OPENAI_API_KEY`, `OPENAI_TEXT_MODEL` | OpenAI-compatible provider; models separated by `\|` |
+| `OPENAI_END_POINT_BK_1`, `OPENAI_API_KEY_BK_1`, `OPENAI_TEXT_MODEL_BK_1` | Fallback gateway |
+| `OPENAI_TIMEOUT_MS` | Request timeout (default 120000) |
+| `AHREFS_API_KEY` | Ahrefs key for Fetch DR |
+
+## Contributing to the catalog
+
+The catalog is one file: [`catalog/sites.json`](catalog/sites.json). To add or fix a site, edit it and run `pnpm test`
+(checks required fields, allowed values, https URLs and duplicates). Fields:
+
+```jsonc
+{
+  "name": "Product Hunt",
+  "url": "https://www.producthunt.com",
+  "submitUrl": "https://www.producthunt.com/posts/new",
+  "type": "launch",              // directory | launch | ugc_blog | community | forum | qa
+  "language": "en",              // en | vi
+  "priority": 92,                // 0-100: relevance + authority + cost/effort + link value
+  "format": "plain",             // plain | markdown | html (what the site's editor accepts)
+  "topics": ["startup", "saas"],
+  "rules": "One or two sentences: free/paid, moderation, link policy.",
+  "needsReview": true,           // optional: submit URL or policy not verified yet
+  "maxLength": 500               // optional: body length limit in characters
+}
+```
+
+Do not claim dofollow/nofollow without checking a real placed link; the app learns it from the link monitor.
+After adding sites, bump `CATALOG_VERSION` in `src/core/catalogSeed.ts` so existing installs pick them up.
 
 ## Code layout
 
 ```
-src/core/      portable logic, no Electron: ai.ts (gateway/model fallback), contentGen.ts (prompts),
-               linkAnalysis.ts (rel/anchor detection), catalogSeed.ts + catalogExtra.ts + catalogMore*.ts (site list, priorities)
-src/main/      Electron main: db/, repo.ts, ipc.ts, browser.ts (Brave/Playwright), checker.ts, config.ts
-src/preload/   typed IPC bridge (window.api.invoke)
-src/shared/    types shared by all layers, including the IPC contract (Api)
-src/renderer/  React + Tailwind UI (custom Dropdown, lucide icons)
+catalog/        sites.json (the catalog)
+src/core/       portable logic, no Electron: ai.ts, contentGen.ts, linkAnalysis.ts, postDetect.ts, ahrefs.ts, catalogSeed.ts
+src/main/       Electron main: db/, repo.ts, ipc.ts, browser.ts, session.ts, tasks.ts, checker.ts, drScan.ts, pdf.ts, favicon.ts
+src/preload/    typed IPC bridge (window.api)
+src/shared/     types shared by all layers, including the IPC contract
+src/renderer/   React + Tailwind UI
+resources/      logo.svg (source of build/icon.png)
+docs/           Wriai AI API contract, screenshots
 ```
-
-`src/core` is written so it can move into Wriai later.
