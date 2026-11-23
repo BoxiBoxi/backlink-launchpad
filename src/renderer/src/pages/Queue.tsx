@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Globe, ListChecks, Loader2, LogIn, Pencil, Play, Plus, Radar, ScanLine, SkipForward, Sparkles, Square, Trash2, X } from 'lucide-react'
-import type { Content, SessionStatus, Task } from '@shared/types'
+import { CheckCircle2, Eraser, Globe, ListChecks, Loader2, LogIn, Pencil, Play, Plus, Radar, ScanLine, SkipForward, Sparkles, Square, Trash2, X } from 'lucide-react'
+import type { Content, SessionStatus, Task, TaskStatus } from '@shared/types'
 import type { PageProps } from '../App'
 import { invoke, useAction, useQuery, useRefresh, useToast } from '../lib'
-import { Badge, Button, Card, Dropdown, Empty, Field, Input, Modal, PageHeader, Toggle } from '../components/ui'
+import { Badge, Button, Card, Dropdown, Empty, Field, Input, Menu, Modal, PageHeader, Tabs, Toggle } from '../components/ui'
 import { LinkTypeBadge, priorityTone, SiteCell, SiteIcon, typeLabel } from '../components/site'
 import { ContentEditor } from './Content'
 
 const statusTone = { queued: 'gray', opened: 'blue', posted: 'green', skipped: 'amber' } as const
+const STATUS_ORDER: Record<TaskStatus, number> = { opened: 0, queued: 1, posted: 2, skipped: 3 }
+type View = 'all' | 'todo' | 'posted' | 'skipped'
 
 export default function Queue({ projectId, go }: PageProps) {
   const projects = useQuery('projects:list')
@@ -25,6 +27,7 @@ export default function Queue({ projectId, go }: PageProps) {
   const [postUrl, setPostUrl] = useState('')
   const [editing, setEditing] = useState<Content | null>(null)
   const [session, setSession] = useState<SessionStatus | null>(null)
+  const [view, setView] = useState<View>('all')
 
   useEffect(() => {
     invoke('session:status').then(setSession).catch(() => undefined)
@@ -58,6 +61,25 @@ export default function Queue({ projectId, go }: PageProps) {
   const reloadAll = () => {
     tasks.reload()
     contents.reload()
+  }
+
+  const all = tasks.data ?? []
+  const count = (pred: (t: Task) => boolean) => all.filter(pred).length
+  const isTodo = (t: Task) => t.status === 'queued' || t.status === 'opened'
+  const shownTasks = all
+    .filter((t) => view === 'all' || (view === 'todo' ? isTodo(t) : t.status === view))
+    .sort(
+      (a, b) =>
+        STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
+        (siteMap.get(b.siteId)?.priority ?? 0) - (siteMap.get(a.siteId)?.priority ?? 0)
+    )
+
+  const clear = async (statuses: TaskStatus[], what: string) => {
+    const n = count((t) => statuses.includes(t.status))
+    if (!n) return
+    if (!confirm(`${what}: remove ${n} task(s) from the queue? Links already saved stay in the Link monitor.`)) return
+    const removed = await run('clear', () => invoke('tasks:clear', { projectId, statuses }), (r) => `Removed ${r} task(s)`)
+    if (removed !== undefined) reloadAll()
   }
 
   const queuedSiteIds = new Set((tasks.data ?? []).filter((t) => t.status !== 'skipped').map((t) => t.siteId))
@@ -94,6 +116,16 @@ export default function Queue({ projectId, go }: PageProps) {
             </Button>
             <Button icon={<X className="size-4" />} onClick={() => run('close', () => invoke('browser:close'), 'Automated Brave closed')}>Close Brave</Button>
             <Button icon={<Plus className="size-4" />} onClick={() => { setPicked([]); setAdding(true) }}>Add sites</Button>
+            <Menu
+              label="Clear"
+              icon={<Eraser className="size-4" />}
+              items={[
+                { label: 'Remove skipped', hint: String(count((t) => t.status === 'skipped')), disabled: !count((t) => t.status === 'skipped'), onClick: () => clear(['skipped'], 'Skipped') },
+                { label: 'Remove not started', hint: String(count((t) => t.status === 'queued')), disabled: !count((t) => t.status === 'queued'), onClick: () => clear(['queued'], 'Not started') },
+                { label: 'Remove posted (keep links)', hint: String(count((t) => t.status === 'posted')), disabled: !count((t) => t.status === 'posted'), onClick: () => clear(['posted'], 'Posted') },
+                { label: 'Remove everything', hint: String(all.length), danger: true, disabled: !all.length, onClick: () => clear(['queued', 'opened', 'posted', 'skipped'], 'Everything') }
+              ]}
+            />
             <Button
               variant="primary"
               icon={<Play className="size-4" />}
@@ -154,7 +186,22 @@ export default function Queue({ projectId, go }: PageProps) {
         </Card>
       )}
 
-      <Card className="overflow-hidden">
+      {all.length > 0 && (
+        <div className="mb-3">
+          <Tabs
+            value={view}
+            onChange={setView}
+            items={[
+              { value: 'all', label: 'All', count: all.length },
+              { value: 'todo', label: 'To do', count: count(isTodo) },
+              { value: 'posted', label: 'Posted', count: count((t) => t.status === 'posted') },
+              { value: 'skipped', label: 'Skipped', count: count((t) => t.status === 'skipped') }
+            ]}
+          />
+        </div>
+      )}
+
+      <Card className="overflow-x-auto">
         {tasks.data?.length === 0 ? (
           <Empty icon={<ListChecks className="size-6" />} title="Queue is empty" text="Add target sites, generate content for each, then open them one by one in Brave." />
         ) : (
@@ -169,19 +216,19 @@ export default function Queue({ projectId, go }: PageProps) {
               </tr>
             </thead>
             <tbody>
-              {(tasks.data ?? []).map((t) => {
+              {shownTasks.map((t) => {
                 const site = siteMap.get(t.siteId)
                 const c = latestContent(t)
                 return (
                   <tr key={t.id} className={`border-b border-gray-50 last:border-0 ${session?.active && session.currentTaskId === t.id ? 'bg-gray-50' : ''}`}>
-                    <td className="px-4 py-3">
+                    <td className="max-w-[16rem] px-4 py-3">
                       {site ? (
                         <SiteCell site={site} sub={`P${site.priority} · ${site.language.toUpperCase()} · ${typeLabel(site.type)}`} />
                       ) : (
                         <span className="text-gray-400">Deleted site</span>
                       )}
                     </td>
-                    <td className="max-w-xs px-3 py-3">
+                    <td className="max-w-[15rem] px-3 py-3">
                       {c ? (
                         <button className="flex max-w-full items-center gap-1.5 text-left text-gray-700 hover:text-gray-900" onClick={() => setEditing(c)}>
                           <Pencil className="size-3.5 shrink-0 text-gray-400" />
@@ -193,18 +240,18 @@ export default function Queue({ projectId, go }: PageProps) {
                     </td>
                     <td className="px-3 py-3">
                       {t.postUrl ? (
-                        <button className="max-w-56 truncate text-left text-xs text-gray-600 underline" onClick={() => invoke('shell:openExternal', t.postUrl)}>{t.postUrl}</button>
+                        <button className="block max-w-44 truncate text-left text-xs text-gray-600 underline" title={t.postUrl} onClick={() => invoke('shell:openExternal', t.postUrl)}>{t.postUrl}</button>
                       ) : (
                         <LinkTypeBadge type={site?.linkType ?? null} />
                       )}
                     </td>
                     <td className="px-3 py-3"><Badge tone={statusTone[t.status]}>{t.status}</Badge></td>
-                    <td className="px-3 py-3">
+                    <td className="w-px whitespace-nowrap px-3 py-3">
                       <div className="flex justify-end gap-1">
                         {t.status !== 'posted' && (
                           <>
                             <Button size="sm" variant="primary" icon={<Globe className="size-3.5" />} loading={busy === `open-${t.id}`} onClick={() => open(t)}>Open</Button>
-                            <Button size="sm" icon={<CheckCircle2 className="size-3.5" />} onClick={() => { setPosting(t); setPostUrl('') }}>Posted</Button>
+                            <Button size="sm" variant="ghost" icon={<CheckCircle2 className="size-3.5" />} title="Mark as posted" onClick={() => { setPosting(t); setPostUrl('') }} />
                             <Button size="sm" variant="ghost" icon={<SkipForward className="size-3.5" />} title="Skip" onClick={async () => { await run('skip', () => invoke('tasks:update', { id: t.id, status: 'skipped' })); tasks.reload() }} />
                           </>
                         )}

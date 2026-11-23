@@ -95,7 +95,7 @@ export default function Catalog(_: PageProps) {
         <Dropdown className="w-44" value={tier} onChange={setTier} options={[{ value: 'all', label: 'All priorities' }, { value: 'high', label: 'High (70+)' }, { value: 'mid', label: 'Medium (40-69)' }, { value: 'low', label: 'Low (<40)' }]} />
         <Dropdown className="w-40" value={lang} onChange={setLang} options={[{ value: 'all', label: 'All languages' }, { value: 'en', label: 'English' }, { value: 'vi', label: 'Vietnamese' }]} />
       </div>
-      <Card className="overflow-hidden">
+      <Card className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50/60 text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>

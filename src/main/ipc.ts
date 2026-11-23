@@ -94,6 +94,15 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
   })
   handle('tasks:update', (t) => taskRepo.update(t))
   handle('tasks:delete', (id) => void taskRepo.delete(id))
+  handle('tasks:clear', ({ projectId, statuses }) => {
+    const st = sessionStatus()
+    if (st.active && st.projectId === projectId && statuses.some((s) => s === 'queued' || s === 'opened')) {
+      throw new Error('Stop the posting session before clearing tasks that are still to do.')
+    }
+    const doomed = taskRepo.list(projectId).filter((t) => statuses.includes(t.status))
+    for (const t of doomed) taskRepo.delete(t.id) // placed_links.task_id is ON DELETE SET NULL: links are kept
+    return doomed.length
+  })
   handle('tasks:open', async (taskId): Promise<OpenResult> => {
     const { page: _page, ...result } = await openTask(taskId)
     return result

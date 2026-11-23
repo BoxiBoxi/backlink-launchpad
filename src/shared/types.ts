@@ -190,6 +190,8 @@ export interface Api {
   'tasks:create': [[{ projectId: number; siteIds: number[] }], Task[]]
   'tasks:update': [[Pick<Task, 'id'> & Partial<Pick<Task, 'status' | 'postUrl' | 'notes' | 'contentId'>>], Task]
   'tasks:delete': [[number], void]
+  /** Delete the project's tasks with these statuses. Tracked links stay in the Link monitor. Returns the count. */
+  'tasks:clear': [[{ projectId: number; statuses: TaskStatus[] }], number]
   'tasks:open': [[number], OpenResult]
   'tasks:readCurrentUrl': [[], string | null]
   'tasks:markPosted': [[{ taskId: number; postUrl: string }], { task: Task; link: PlacedLink }]

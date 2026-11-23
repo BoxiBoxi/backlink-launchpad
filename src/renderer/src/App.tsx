@@ -98,7 +98,7 @@ ${e.url}`, {
         </div>
       </aside>
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-8 py-8">
+        <div className="mx-auto max-w-7xl px-8 py-8">
           {page === 'dashboard' && <Dashboard {...props} />}
           {page === 'projects' && <Projects {...props} />}
           {page === 'catalog' && <Catalog {...props} />}

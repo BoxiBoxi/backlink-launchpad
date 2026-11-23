@@ -65,7 +65,7 @@ export default function Links({ projectId }: PageProps) {
         <Card className="p-5"><Stat label="Live" value={live.length} /></Card>
         <Card className="p-5"><Stat label="Dofollow" value={live.filter((l) => l.rel === 'dofollow').length} /></Card>
       </div>
-      <Card className="overflow-hidden">
+      <Card className="overflow-x-auto">
         {!list.length ? (
           <Empty icon={<Link2 className="size-6" />} title="No links tracked yet" text='Links are added when you mark a task as posted, or add one manually.' />
         ) : (

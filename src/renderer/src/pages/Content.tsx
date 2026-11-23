@@ -144,7 +144,7 @@ export default function ContentPage({ projectId, go }: PageProps) {
         </div>
       </Card>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-x-auto">
         {contents.data?.length === 0 ? (
           <Empty icon={<PenLine className="size-6" />} title="No content yet" text="Pick a site above and generate the first post." />
         ) : (

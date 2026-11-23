@@ -240,3 +240,77 @@ export function ListInput({ value, onChange, placeholder }: { value: string[]; o
     />
   )
 }
+
+export interface MenuItem {
+  label: string
+  hint?: string
+  danger?: boolean
+  disabled?: boolean
+  onClick: () => void
+}
+
+/** Button that opens a small action menu. */
+export function Menu({ label, icon, items, align = 'right' }: { label: string; icon?: ReactNode; items: MenuItem[]; align?: 'left' | 'right' }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDown)
+    return () => document.removeEventListener('mousedown', onDown)
+  }, [open])
+  return (
+    <div ref={ref} className="relative">
+      <Button icon={icon} onClick={() => setOpen((o) => !o)}>
+        {label}
+        <ChevronDown className={`size-3.5 text-gray-400 transition ${open ? 'rotate-180' : ''}`} />
+      </Button>
+      {open && (
+        <div className={`absolute z-30 mt-1 w-72 rounded-xl border border-gray-200 bg-white p-1 shadow-xl ${align === 'right' ? 'right-0' : 'left-0'}`}>
+          {items.map((it) => (
+            <button
+              key={it.label}
+              type="button"
+              disabled={it.disabled}
+              onClick={() => {
+                setOpen(false)
+                it.onClick()
+              }}
+              className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm disabled:cursor-not-allowed disabled:opacity-40 ${
+                it.danger ? 'text-red-600 hover:bg-red-50' : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <span>{it.label}</span>
+              {it.hint && <span className="shrink-0 text-xs text-gray-400">{it.hint}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Segmented tabs with optional counts. */
+export function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: { value: T; label: string; count?: number }[] }) {
+  return (
+    <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1">
+      {items.map((it) => (
+        <button
+          key={it.value}
+          type="button"
+          onClick={() => onChange(it.value)}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm transition ${
+            value === it.value ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-50'
+          }`}
+        >
+          {it.label}
+          {it.count !== undefined && (
+            <span className={`rounded-md px-1.5 text-xs tabular-nums ${value === it.value ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>{it.count}</span>
+          )}
+        </button>
+      ))}
+    </div>
+  )
+}
