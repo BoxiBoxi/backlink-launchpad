@@ -47,7 +47,8 @@ Endpoint, models and key can also be overridden in **Settings** (stored in the l
 ## Brave profile
 
 - Brave is auto-detected (`Program Files`, `Program Files (x86)`, `%LOCALAPPDATA%`); the path can be set in Settings.
-- The app uses a **dedicated profile** at `%APPDATA%\BacklinkBuilder\brave-profile`, never your main Brave profile.
+- The app uses a **dedicated profile** at `<data folder>\brave-profile` (see Data below), never your main Brave
+  profile. Cookies and logins persist there between runs.
 - First time: Posting queue -> **Brave login window**. This opens Brave on that profile *without* automation, so
   Google/GitHub logins work normally. Sign in to the sites you plan to use, then close that window. Sessions persist.
 - **Open** on a task launches Brave on the same profile through Playwright. Only one Brave window can use the profile
