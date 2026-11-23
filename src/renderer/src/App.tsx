@@ -1,0 +1,104 @@
+import { useEffect, useState } from 'react'
+import { BookOpen, FolderKanban, LayoutDashboard, Link2, ListChecks, PenLine, Settings as SettingsIcon } from 'lucide-react'
+import { ToastProvider, useQuery } from './lib'
+import { Dropdown } from './components/ui'
+import Dashboard from './pages/Dashboard'
+import Projects from './pages/Projects'
+import Catalog from './pages/Catalog'
+import ContentPage from './pages/Content'
+import Queue from './pages/Queue'
+import Links from './pages/Links'
+import SettingsPage from './pages/Settings'
+
+export type Page = 'dashboard' | 'projects' | 'catalog' | 'content' | 'queue' | 'links' | 'settings'
+
+const NAV: { id: Page; label: string; icon: typeof LayoutDashboard }[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'projects', label: 'Projects', icon: FolderKanban },
+  { id: 'catalog', label: 'Site catalog', icon: BookOpen },
+  { id: 'content', label: 'AI content', icon: PenLine },
+  { id: 'queue', label: 'Posting queue', icon: ListChecks },
+  { id: 'links', label: 'Link monitor', icon: Link2 },
+  { id: 'settings', label: 'Settings', icon: SettingsIcon }
+]
+
+export interface PageProps {
+  projectId: number | null
+  setProjectId: (id: number | null) => void
+  go: (p: Page) => void
+  refreshProjects: () => void
+}
+
+function Shell() {
+  const [page, setPage] = useState<Page>('dashboard')
+  const [projectId, setProjectId] = useState<number | null>(null)
+  const projects = useQuery('projects:list')
+
+  useEffect(() => {
+    if (projectId === null && projects.data?.length) setProjectId(projects.data[0].id)
+    if (projectId !== null && projects.data && !projects.data.some((p) => p.id === projectId)) setProjectId(projects.data[0]?.id ?? null)
+  }, [projects.data, projectId])
+
+  const props: PageProps = { projectId, setProjectId, go: setPage, refreshProjects: projects.reload }
+
+  return (
+    <div className="flex h-full">
+      <aside className="flex w-60 shrink-0 flex-col border-r border-gray-200 bg-white">
+        <div className="flex items-center gap-2.5 px-5 py-5">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-gray-900 text-white">
+            <Link2 className="size-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-gray-900">BacklinkBuilder</div>
+            <div className="text-xs text-gray-400">Campaign manager</div>
+          </div>
+        </div>
+        <div className="px-3 pb-3">
+          <div className="mb-1.5 px-2 text-[11px] font-medium uppercase tracking-wide text-gray-400">Active project</div>
+          <Dropdown
+            value={projectId}
+            placeholder="No project yet"
+            options={(projects.data ?? []).map((p) => ({ value: p.id, label: p.name }))}
+            onChange={setProjectId}
+          />
+        </div>
+        <nav className="flex flex-1 flex-col gap-0.5 px-3">
+          {NAV.map((n) => (
+            <button
+              key={n.id}
+              onClick={() => setPage(n.id)}
+              className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
+                page === n.id ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              <n.icon className="size-4" />
+              {n.label}
+            </button>
+          ))}
+        </nav>
+        <div className="px-5 py-4 text-[11px] leading-relaxed text-gray-400">
+          Human in the loop: the app fills drafts, you review and submit.
+        </div>
+      </aside>
+      <main className="flex-1 overflow-y-auto">
+        <div className="mx-auto max-w-6xl px-8 py-8">
+          {page === 'dashboard' && <Dashboard {...props} />}
+          {page === 'projects' && <Projects {...props} />}
+          {page === 'catalog' && <Catalog {...props} />}
+          {page === 'content' && <ContentPage {...props} />}
+          {page === 'queue' && <Queue {...props} />}
+          {page === 'links' && <Links {...props} />}
+          {page === 'settings' && <SettingsPage {...props} />}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <ToastProvider>
+      <Shell />
+    </ToastProvider>
+  )
+}
