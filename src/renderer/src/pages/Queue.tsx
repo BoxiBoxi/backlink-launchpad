@@ -4,7 +4,7 @@ import type { Content, SessionStatus, Task } from '@shared/types'
 import type { PageProps } from '../App'
 import { invoke, useAction, useQuery, useRefresh, useToast } from '../lib'
 import { Badge, Button, Card, Dropdown, Empty, Field, Input, Modal, PageHeader, Toggle } from '../components/ui'
-import { LinkTypeBadge, typeLabel } from './Catalog'
+import { LinkTypeBadge, priorityTone, SiteCell, SiteIcon, typeLabel } from '../components/site'
 import { ContentEditor } from './Content'
 
 const statusTone = { queued: 'gray', opened: 'blue', posted: 'green', skipped: 'amber' } as const
@@ -175,8 +175,11 @@ export default function Queue({ projectId, go }: PageProps) {
                 return (
                   <tr key={t.id} className={`border-b border-gray-50 last:border-0 ${session?.active && session.currentTaskId === t.id ? 'bg-gray-50' : ''}`}>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{site?.name ?? 'Deleted site'}</div>
-                      <div className="text-xs text-gray-400">{site ? `${site.language.toUpperCase()} · ${typeLabel(site.type)}` : ''}</div>
+                      {site ? (
+                        <SiteCell site={site} sub={`P${site.priority} · ${site.language.toUpperCase()} · ${typeLabel(site.type)}`} />
+                      ) : (
+                        <span className="text-gray-400">Deleted site</span>
+                      )}
                     </td>
                     <td className="max-w-xs px-3 py-3">
                       {c ? (
@@ -249,12 +252,25 @@ export default function Queue({ projectId, go }: PageProps) {
           <Toggle checked={addable.length > 0 && addable.every((s) => picked.includes(s.id))} onChange={(v) => setPicked(v ? addable.map((s) => s.id) : [])} label="Select all" />
         </div>
         <div className="flex max-h-96 flex-col gap-1 overflow-y-auto">
-          {addable.map((s) => (
-            <div key={s.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 hover:bg-gray-50">
-              <Toggle checked={picked.includes(s.id)} onChange={(v) => setPicked(v ? [...picked, s.id] : picked.filter((x) => x !== s.id))} label={s.name} />
-              <span className="text-xs text-gray-400">P{s.priority} · {s.language.toUpperCase()} · {typeLabel(s.type)}</span>
-            </div>
-          ))}
+          {addable.map((s) => {
+            const on = picked.includes(s.id)
+            return (
+              <div
+                key={s.id}
+                onClick={() => setPicked(on ? picked.filter((x) => x !== s.id) : [...picked, s.id])}
+                className={`flex cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 ${on ? 'bg-gray-50' : 'hover:bg-gray-50'}`}
+              >
+                <div className="flex items-center gap-2">
+                  <Toggle checked={on} onChange={() => undefined} label="" />
+                  <SiteIcon url={s.url} name={s.name} size="sm" />
+                  <span className="text-sm text-gray-800">{s.name}</span>
+                </div>
+                <span className="text-xs text-gray-400">
+                  <span className={`font-semibold ${priorityTone(s.priority).text}`}>P{s.priority}</span> · {s.language.toUpperCase()} · {typeLabel(s.type)}
+                </span>
+              </div>
+            )
+          })}
           {!addable.length && <p className="py-6 text-center text-sm text-gray-400">Every matching site is already queued.</p>}
         </div>
       </Modal>

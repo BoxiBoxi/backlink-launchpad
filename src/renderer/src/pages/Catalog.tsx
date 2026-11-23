@@ -4,33 +4,10 @@ import type { Site, SiteInput } from '@shared/types'
 import type { PageProps } from '../App'
 import { fmtDate, invoke, useAction, useQuery, useToast } from '../lib'
 import { Badge, Button, Card, Dropdown, Field, Input, ListInput, Modal, PageHeader, Textarea, Toggle } from '../components/ui'
+import { AliveBadge, LangBadge, LinkTypeBadge, PriorityScore, SiteCell, TYPE_OPTIONS, TypeBadge } from '../components/site'
 
-export const TYPE_OPTIONS = [
-  { value: 'directory', label: 'Directory' },
-  { value: 'launch', label: 'Launch platform' },
-  { value: 'ugc_blog', label: 'UGC blog' },
-  { value: 'community', label: 'Community' },
-  { value: 'forum', label: 'Forum' },
-  { value: 'qa', label: 'Q&A' }
-] as const
-
-export const typeLabel = (t: string) => TYPE_OPTIONS.find((o) => o.value === t)?.label ?? t
-
-export function LinkTypeBadge({ type }: { type: string | null }) {
-  if (!type) return <Badge>-</Badge>
-  const tone = type === 'dofollow' ? 'green' : type === 'unknown' ? 'gray' : 'amber'
-  return <Badge tone={tone}>{type}</Badge>
-}
-
-export function PriorityBar({ value }: { value: number }) {
-  const tone = value >= 70 ? 'bg-gray-900' : value >= 40 ? 'bg-gray-500' : 'bg-gray-300'
-  return (
-    <div className="flex items-center gap-2" title={`Priority ${value}`}>
-      <span className="w-6 text-right text-xs font-semibold tabular-nums text-gray-900">{value}</span>
-      <span className="h-1.5 w-12 overflow-hidden rounded-full bg-gray-100"><span className={`block h-full ${tone}`} style={{ width: `${value}%` }} /></span>
-    </div>
-  )
-}
+// Site visuals live in components/site.tsx; re-exported for older imports.
+export { LinkTypeBadge, TYPE_OPTIONS, typeLabel } from '../components/site'
 
 const blank: SiteInput = {
   name: '',
@@ -122,11 +99,13 @@ export default function Catalog(_: PageProps) {
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50/60 text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>
-              <th className="px-4 py-3 font-medium" title="0-100, higher = post here first">Priority</th>
+              <th className="px-4 py-3 font-medium" title="Our score 0-100 (relevance + authority + cost/effort + link value). Not DA/DR.">
+                Priority
+              </th>
               <th className="px-3 py-3 font-medium">Site</th>
               <th className="px-3 py-3 font-medium">Type</th>
               <th className="px-3 py-3 font-medium">Lang</th>
-              <th className="px-3 py-3 font-medium">DR</th>
+              <th className="px-3 py-3 font-medium" title="Domain Rating, entered manually">DR</th>
               <th className="px-3 py-3 font-medium">Link</th>
               <th className="px-3 py-3 font-medium">Alive</th>
               <th className="px-3 py-3" />
@@ -135,23 +114,19 @@ export default function Catalog(_: PageProps) {
           <tbody>
             {shown.map((s) => (
               <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
-                <td className="px-4 py-3"><PriorityBar value={s.priority} /></td>
-                <td className="max-w-sm px-3 py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-gray-900">{s.name}</span>
-                    {s.needsReview && <Badge tone="blue">review</Badge>}
+                <td className="px-4 py-3"><PriorityScore value={s.priority} /></td>
+                <td className="max-w-[18rem] px-3 py-3" title={s.rules}>
+                  <SiteCell site={s} sub={s.rules || s.url}>
+                    {s.needsReview && <Badge tone="amber">review</Badge>}
                     {s.status !== 'active' && <Badge tone="red">{s.status}</Badge>}
-                  </div>
-                  <div className="truncate text-xs text-gray-400" title={s.rules}>{s.rules || s.url}</div>
+                  </SiteCell>
                 </td>
-                <td className="whitespace-nowrap px-3 py-3 text-gray-600">{typeLabel(s.type)}</td>
-                <td className="px-3 py-3 uppercase text-gray-600">{s.language}</td>
-                <td className="px-3 py-3 text-gray-600">{s.dr ?? '-'}</td>
+                <td className="px-3 py-3"><TypeBadge type={s.type} /></td>
+                <td className="px-3 py-3"><LangBadge lang={s.language} /></td>
+                <td className="px-3 py-3 tabular-nums text-gray-700">{s.dr ?? <span className="text-gray-300">-</span>}</td>
                 <td className="px-3 py-3"><LinkTypeBadge type={s.linkType} /></td>
-                <td className="px-3 py-3" title={s.lastCheckedAt ? `Checked ${fmtDate(s.lastCheckedAt)}` : 'Never checked'}>
-                  <Badge tone={s.alive === 'up' ? 'green' : s.alive === 'down' ? 'red' : 'gray'}>
-                    {s.alive}{s.httpStatus ? ` ${s.httpStatus}` : ''}
-                  </Badge>
+                <td className="whitespace-nowrap px-3 py-3">
+                  <AliveBadge alive={s.alive} httpStatus={s.httpStatus} title={s.lastCheckedAt ? `Checked ${fmtDate(s.lastCheckedAt)}` : 'Never checked'} />
                 </td>
                 <td className="px-3 py-3">
                   <div className="flex justify-end gap-1">

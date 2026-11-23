@@ -8,6 +8,7 @@ import { loadEnv } from './config'
 import { settingsRepo } from './repo'
 import { startLinkScheduler } from './checker'
 import { closePostingBrowser } from './browser'
+import { handleFavicon } from './favicon'
 
 // Pin the data folder (SQLite DB, Brave profile with cookies/logins, media) so it never depends on how Electron
 // was launched:
@@ -22,7 +23,10 @@ app.setPath(
 )
 
 // bb-file://img?p=<absolute path> serves local images (logo, screenshots) to the renderer.
-protocol.registerSchemesAsPrivileged([{ scheme: 'bb-file', privileges: { secure: true, supportFetchAPI: true, stream: true } }])
+protocol.registerSchemesAsPrivileged([
+  { scheme: 'bb-file', privileges: { secure: true, supportFetchAPI: true, stream: true } },
+  { scheme: 'bb-favicon', privileges: { secure: true, supportFetchAPI: true } }
+])
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
 let mainWindow: BrowserWindow | null = null
@@ -78,6 +82,7 @@ app.whenReady().then(() => {
     if (!IMAGE_EXT.has(extname(p).toLowerCase())) return new Response('Forbidden', { status: 403 })
     return net.fetch(pathToFileURL(p).toString())
   })
+  protocol.handle('bb-favicon', handleFavicon)
   initEvents(() => mainWindow)
   registerIpc(() => mainWindow)
   startLinkScheduler(() => Number(settingsRepo.get('linkCheckIntervalHours') || 24))

@@ -5,7 +5,7 @@ import type { PageProps } from '../App'
 import { fmtDate, invoke, useAction, useQuery, useToast } from '../lib'
 import { Badge, Button, Card, Dropdown, Empty, Field, Input, ListInput, Modal, PageHeader, Toggle } from '../components/ui'
 import BodyEditor, { bodyToHtml } from '../components/BodyEditor'
-import { typeLabel } from './Catalog'
+import { SiteIcon, typeLabel } from '../components/site'
 
 export function ContentEditor({ content, format, siteName, onClose, onSaved }: { content: Content | null; format: ContentFormat; siteName?: string; onClose: () => void; onSaved: (c: Content) => void }) {
   const [draft, setDraft] = useState<Content | null>(content)
@@ -165,7 +165,16 @@ export default function ContentPage({ projectId, go }: PageProps) {
                     <div className="truncate font-medium text-gray-900">{c.title || '(untitled)'}</div>
                     <div className="truncate text-xs text-gray-400">{c.body.slice(0, 140)}</div>
                   </td>
-                  <td className="px-3 py-3 text-gray-600">{siteMap.get(c.siteId)?.name ?? '-'}</td>
+                  <td className="px-3 py-3 text-gray-700">
+                    {siteMap.get(c.siteId) ? (
+                      <span className="flex items-center gap-2">
+                        <SiteIcon url={siteMap.get(c.siteId)!.url} name={siteMap.get(c.siteId)!.name} size="sm" />
+                        {siteMap.get(c.siteId)!.name}
+                      </span>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
                   <td className="px-3 py-3"><Badge tone={c.status === 'ready' ? 'blue' : c.status === 'used' ? 'green' : 'gray'}>{c.status}</Badge></td>
                   <td className="px-3 py-3 text-gray-500">{fmtDate(c.updatedAt)}</td>
                   <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
