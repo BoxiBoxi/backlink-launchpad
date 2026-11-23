@@ -92,6 +92,9 @@ const TITLE_SELECTORS = [
   '[contenteditable="true"][data-placeholder*="title" i]',
   '[contenteditable="true"][aria-label*="title" i]',
   'h1[contenteditable="true"]',
+  '[data-placeholder*="title" i]',
+  'h1[data-placeholder]',
+  'h3.graf--title',
   'input[name="name"]',
   'input[name*="tool_name" i]',
   'input[placeholder*="name" i]'
