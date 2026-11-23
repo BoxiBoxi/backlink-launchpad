@@ -136,7 +136,13 @@ async function tryFill(frames: Frame[], selectors: string[], value: string, page
           const isContentEditable = await el.evaluate((node) => (node as HTMLElement).isContentEditable && !('value' in node))
           if (isContentEditable) {
             await el.click()
-            await page.keyboard.insertText(value)
+            if (/<(p|h[1-6]|ul|ol|li|a|strong|em|br)\b[^>]*>/i.test(value)) {
+              // Rich-text editor + HTML body: insert as formatted content, not as visible tags.
+              const ok = await el.evaluate((_node, html) => document.execCommand('insertHTML', false, html), value)
+              if (!ok) await page.keyboard.insertText(value.replace(/<[^>]+>/g, ' ').replace(/[ \t]+/g, ' '))
+            } else {
+              await page.keyboard.insertText(value)
+            }
           } else {
             await el.fill(value)
           }
