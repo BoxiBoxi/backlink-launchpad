@@ -47,6 +47,14 @@ function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = null
   })
+  // Links clicked inside the app (e.g. in a content preview) open in the default browser, never in the app window.
+  mainWindow.webContents.on('will-navigate', (e, url) => {
+    const devUrl = process.env['ELECTRON_RENDERER_URL']
+    if (devUrl && url.startsWith(devUrl)) return
+    if (url.startsWith('file:')) return
+    e.preventDefault()
+    if (/^https?:\/\//.test(url)) shell.openExternal(url)
+  })
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url)) shell.openExternal(url)
     return { action: 'deny' }

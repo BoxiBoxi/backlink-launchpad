@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Copy, ListPlus, PenLine, Sparkles, Trash2 } from 'lucide-react'
-import type { Content } from '@shared/types'
+import type { Content, ContentFormat } from '@shared/types'
 import type { PageProps } from '../App'
 import { fmtDate, invoke, useAction, useQuery, useToast } from '../lib'
-import { Badge, Button, Card, Dropdown, Empty, Field, Input, ListInput, Modal, PageHeader, Textarea } from '../components/ui'
+import { Badge, Button, Card, Dropdown, Empty, Field, Input, ListInput, Modal, PageHeader } from '../components/ui'
+import BodyEditor from '../components/BodyEditor'
 import { typeLabel } from './Catalog'
 
-export function ContentEditor({ content, onClose, onSaved }: { content: Content | null; onClose: () => void; onSaved: (c: Content) => void }) {
+export function ContentEditor({ content, format, siteName, onClose, onSaved }: { content: Content | null; format: ContentFormat; siteName?: string; onClose: () => void; onSaved: (c: Content) => void }) {
   const [draft, setDraft] = useState<Content | null>(content)
   const { busy, run } = useAction()
   const toast = useToast()
@@ -20,7 +21,7 @@ export function ContentEditor({ content, onClose, onSaved }: { content: Content 
     <Modal
       open={!!content}
       onClose={onClose}
-      title="Edit content"
+      title={siteName ? `Edit content for ${siteName}` : 'Edit content'}
       wide
       footer={
         <>
@@ -41,8 +42,8 @@ export function ContentEditor({ content, onClose, onSaved }: { content: Content 
     >
       <div className="grid grid-cols-2 gap-4">
         <Field label="Title" className="col-span-2"><Input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></Field>
-        <Field label={`Body (${draft.body.length} chars)`} className="col-span-2">
-          <Textarea rows={16} className="font-mono text-[13px]" value={draft.body} onChange={(e) => setDraft({ ...draft, body: e.target.value })} />
+        <Field label="Body" className="col-span-2" asDiv>
+          <BodyEditor key={draft.id} format={format} value={draft.body} onChange={(body) => setDraft((d) => (d ? { ...d, body } : d))} />
         </Field>
         <Field label="Link URL"><Input value={draft.linkUrl} onChange={(e) => setDraft({ ...draft, linkUrl: e.target.value })} /></Field>
         <Field label="Anchor"><Input value={draft.anchor} onChange={(e) => setDraft({ ...draft, anchor: e.target.value })} /></Field>
@@ -177,6 +178,8 @@ export default function ContentPage({ projectId, go }: PageProps) {
       </Card>
       <ContentEditor
         content={editing}
+        format={(editing && siteMap.get(editing.siteId)?.format) || 'plain'}
+        siteName={editing ? siteMap.get(editing.siteId)?.name : undefined}
         onClose={() => setEditing(null)}
         onSaved={() => {
           setEditing(null)

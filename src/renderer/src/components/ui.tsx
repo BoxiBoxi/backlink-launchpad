@@ -47,13 +47,15 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
   )
 }
 
-export function Field({ label, hint, children, className = '' }: { label: string; hint?: string; children: ReactNode; className?: string }) {
+/** Form field wrapper. Use asDiv for composite widgets (editors, tab bars) so clicks are not redirected by <label>. */
+export function Field({ label, hint, children, className = '', asDiv }: { label: string; hint?: string; children: ReactNode; className?: string; asDiv?: boolean }) {
+  const Tag = asDiv ? 'div' : 'label'
   return (
-    <label className={`block ${className}`}>
+    <Tag className={`block ${className}`}>
       <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500">{label}</span>
       {children}
       {hint && <span className="mt-1 block text-xs text-gray-400">{hint}</span>}
-    </label>
+    </Tag>
   )
 }
 

@@ -228,7 +228,7 @@ export default function Queue({ projectId, go }: PageProps) {
         </Field>
       </Modal>
 
-      <ContentEditor content={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); contents.reload() }} />
+      <ContentEditor content={editing} format={(editing && siteMap.get(editing.siteId)?.format) || 'plain'} siteName={editing ? siteMap.get(editing.siteId)?.name : undefined} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); contents.reload() }} />
     </>
   )
 }
