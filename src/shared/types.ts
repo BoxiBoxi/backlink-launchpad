@@ -220,7 +220,7 @@ export interface Api {
   'projects:pickImages': [[], string[]]
 
   'content:list': [[number | null], Content[]]
-  'content:generate': [[{ projectId: number; siteId: number; linkUrl?: string; anchor?: string; extra?: string }], Content & { creditsRemaining?: number | null }]
+  'content:generate': [[{ projectId: number; siteId: number; linkUrl?: string; anchor?: string; extra?: string; replaceId?: number }], Content & { creditsRemaining?: number | null }]
   'content:save': [[Pick<Content, 'id' | 'title' | 'body' | 'tags' | 'linkUrl' | 'anchor' | 'status'>], Content]
   'content:delete': [[number], void]
   /** bodyHtml: sanitized HTML of the body (rendered by the renderer). Returns the saved path, or null if cancelled. */

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, Compass, FolderKanban, LayoutDashboard, Link2, ListChecks, PenLine, Settings as SettingsIcon } from 'lucide-react'
+import { BookOpen, Compass, FolderKanban, LayoutDashboard, Link2, ListChecks, Settings as SettingsIcon } from 'lucide-react'
 import { invoke, requestRefresh, ToastProvider, useQuery, useToast } from './lib'
 import { Dropdown } from './components/ui'
 import SetupGuide from './components/SetupGuide'
@@ -7,18 +7,16 @@ import { APP_BY, APP_NAME, LogoMark } from './components/Logo'
 import Dashboard from './pages/Dashboard'
 import Projects from './pages/Projects'
 import Catalog from './pages/Catalog'
-import ContentPage from './pages/Content'
 import Queue from './pages/Queue'
 import Links from './pages/Links'
 import SettingsPage from './pages/Settings'
 
-export type Page = 'dashboard' | 'projects' | 'catalog' | 'content' | 'queue' | 'links' | 'settings'
+export type Page = 'dashboard' | 'projects' | 'catalog' | 'queue' | 'links' | 'settings'
 
 const NAV: { id: Page; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'projects', label: 'Projects', icon: FolderKanban },
   { id: 'catalog', label: 'Site catalog', icon: BookOpen },
-  { id: 'content', label: 'AI content', icon: PenLine },
   { id: 'queue', label: 'Posting queue', icon: ListChecks },
   { id: 'links', label: 'Link monitor', icon: Link2 },
   { id: 'settings', label: 'Settings', icon: SettingsIcon }
@@ -143,7 +141,6 @@ ${e.url}`, {
           {page === 'dashboard' && <Dashboard {...props} />}
           {page === 'projects' && <Projects {...props} />}
           {page === 'catalog' && <Catalog {...props} />}
-          {page === 'content' && <ContentPage {...props} />}
           {page === 'queue' && <Queue {...props} />}
           {page === 'links' && <Links {...props} />}
           {page === 'settings' && <SettingsPage {...props} />}

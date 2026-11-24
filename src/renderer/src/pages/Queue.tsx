@@ -5,7 +5,7 @@ import type { PageProps } from '../App'
 import { invoke, useAction, useIncremental, useQuery, useRefresh, useToast } from '../lib'
 import { Badge, Button, Card, Dropdown, Empty, Field, Input, Menu, Modal, PageHeader, Tabs, Toggle } from '../components/ui'
 import { LinkTypeBadge, priorityTone, SiteCell, SiteIcon, typeLabel } from '../components/site'
-import { ContentEditor } from './Content'
+import { ContentEditor } from '../components/ContentEditor'
 
 const statusTone = { queued: 'gray', opened: 'blue', posted: 'green', skipped: 'amber' } as const
 const STATUS_ORDER: Record<TaskStatus, number> = { opened: 0, queued: 1, posted: 2, skipped: 3 }

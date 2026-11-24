@@ -55,7 +55,7 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
 
   // content
   handle('content:list', (projectId) => contentRepo.list(projectId))
-  handle('content:generate', async ({ projectId, siteId, linkUrl, anchor, extra }) => {
+  handle('content:generate', async ({ projectId, siteId, linkUrl, anchor, extra, replaceId }) => {
     const project = projectRepo.get(projectId)
     const site = siteRepo.get(siteId)
     if (!project || !site) throw new Error('Project or site not found')
@@ -64,6 +64,11 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
     if (!url) throw new Error('Add a target URL to the project first')
     const anchorText = anchor ?? target?.anchors[Math.floor(Math.random() * Math.max(1, target.anchors.length))] ?? project.name
     const gen = await generateContent(aiGateways(), { project, site, linkUrl: url, anchor: anchorText || project.name, extra }, aiTimeoutMs())
+    // replaceId: rewrite an existing draft in place (Regenerate in the editor) instead of adding a new one.
+    if (replaceId) {
+      const updated = contentRepo.update({ id: replaceId, title: gen.title, body: gen.body, tags: gen.tags, linkUrl: url, anchor: anchorText || project.name, model: gen.model })
+      return { ...updated, creditsRemaining: gen.credits?.remaining ?? undefined }
+    }
     const saved = contentRepo.insert({
       projectId,
       siteId,

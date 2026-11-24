@@ -43,7 +43,7 @@ export default function Dashboard({ setProjectId, go, createProject }: PageProps
     { placed: 0, live: 0, dofollow: 0, pending: 0 }
   )
   const noProjects = projects.data !== undefined && projects.data.length === 0
-  const open = (id: number, page: 'queue' | 'content' | 'links') => {
+  const open = (id: number, page: 'queue' | 'links') => {
     setProjectId(id)
     go(page)
   }
@@ -129,7 +129,7 @@ export default function Dashboard({ setProjectId, go, createProject }: PageProps
                     </div>
                   </div>
                   <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
-                    <Button size="sm" variant="ghost" icon={<PenLine className="size-3.5" />} onClick={() => open(p.id, 'content')}>{s?.drafts ?? 0} drafts</Button>
+                    <Button size="sm" variant="ghost" icon={<PenLine className="size-3.5" />} onClick={() => open(p.id, 'queue')}>{s?.drafts ?? 0} drafts</Button>
                     <Button size="sm" variant="ghost" icon={<Link2 className="size-3.5" />} onClick={() => open(p.id, 'links')}>Links</Button>
                     <Button size="sm" className="ml-auto" icon={<ArrowRight className="size-3.5" />} onClick={() => open(p.id, 'queue')}>Posting queue</Button>
                   </div>

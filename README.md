@@ -19,7 +19,7 @@ everything, and you review and click submit yourself.
 | --- | --- |
 | **Site catalog** | 414 places to publish: AI/SaaS directories, launch platforms, UGC blogs, communities, forums, Q&A (English and Vietnamese). Each has a priority score (0-100), Ahrefs DR (one click, free), type, language, link rules and an alive check. |
 | **Projects** | A brand profile per product: description, target URLs with anchor texts, logo and screenshots. |
-| **AI content** | A unique, value-first post per site, in that site's language, length and format (HTML, Markdown or plain text). WYSIWYG editor, preview and PDF export (for Yumpu, Issuu, Scribd, SlideShare). |
+| **AI writing** | In the posting queue, one click writes a unique, value-first post per site, in that site's language, length and format (HTML, Markdown or plain text). WYSIWYG editor, preview, Regenerate with your own instructions, and PDF export (for Yumpu, Issuu, Scribd, SlideShare). |
 | **Posting queue** | Opens each submit page in a separate browser profile, fills title and body, attaches logo and screenshots. **Start session** walks the queue by priority and saves the live post URL automatically when you publish (with Undo). |
 | **Link monitor** | Re-checks every placed link: page live, link present, `rel` (dofollow, nofollow, ugc, sponsored), anchor text. |
 
