@@ -31,8 +31,8 @@ Base URL is configurable in the app with `WRIAI_API_BASE` (default `https://wria
 }
 ```
 
-- `model`: `wriai-auto` lets Wriai pick its own model chain (reuse `generateAICompletionDetailed` in `src/lib/ai.ts`).
-  Unknown models should fall back to `wriai-auto` rather than fail.
+- `model`: ignored. The server always picks the model chain itself, in order, from `WRIAI_API_TEXT_MODEL` in Wriai's
+  `.env` (default `gpt-5.6-luna|gpt-5.4-nano`). Responses report `model: "wriai-auto"`.
 - `max_tokens` / `max_completion_tokens`, `temperature`, `response_format` are optional hints. The server may ignore them.
 - No streaming needed (the app reads one JSON response).
 

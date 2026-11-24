@@ -70,10 +70,12 @@ export function gatewaysFromEnv(env: Record<string, string | undefined>): AiGate
 }
 
 class HttpError extends Error {
-  constructor(public status: number, public detail: string) {
+  constructor(public status: number, public detail: string, public retryAfterMs: number | null = null) {
     super(`HTTP ${status}: ${detail.slice(0, 300)}`)
   }
 }
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 async function postChat(gw: AiGateway, payload: Record<string, unknown>, timeoutMs: number): Promise<{ content: string; credits?: ChatResult['credits'] }> {
   const controller = new AbortController()
@@ -94,7 +96,8 @@ async function postChat(gw: AiGateway, payload: Record<string, unknown>, timeout
         // A web page instead of JSON: the URL is not an API endpoint (wrong base URL, or not deployed yet).
         if (/^\s*</.test(text)) detail = `no API endpoint at ${gw.url.replace(/\/$/, '')}/chat/completions (the server returned a web page)`
       }
-      throw new HttpError(res.status, detail)
+      const retryAfter = Number(res.headers.get('retry-after'))
+      throw new HttpError(res.status, detail, Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : null)
     }
     const json = JSON.parse(text)
     const msg = json?.choices?.[0]?.message
@@ -163,6 +166,11 @@ export async function chat(gateways: AiGateway[], opts: ChatOptions): Promise<Ch
           break
         } catch (err) {
           if (err instanceof HttpError && err.status === 400 && relaxParams(payload, err.detail, maxTokens)) continue
+          // Rate limited or a transient upstream failure: wait (Retry-After, capped at 20s) and retry the same model.
+          if (err instanceof HttpError && (err.status === 429 || err.status === 502 || err.status === 503) && attempt < 2) {
+            await sleep(Math.min(err.retryAfterMs ?? 2000 * (attempt + 1), 20000))
+            continue
+          }
           if (err instanceof HttpError && err.status === 402) {
             throw new Error(`Not enough credits on ${gw.name === 'wriai' ? 'your Wriai account (top up at https://wriai.com/dashboard/billing)' : gw.name}: ${err.detail.slice(0, 200)}`)
           }

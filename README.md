@@ -48,7 +48,7 @@ A setup guide opens on first launch (reopen it any time from **Setup guide** in 
 1. **Browser**: found automatically, or set its path.
 2. **AI writing**: choose one:
    - **Wriai API** (recommended): paste the API key from your [Wriai account](https://wriai.com/dashboard/api-docs).
-     Generation is billed in Wriai credits by characters written. New Wriai accounts get free trial credits.
+     Generation is billed in Wriai credits by characters written. API keys need an active paid Wriai plan.
    - **OpenAI-compatible**: your own endpoint, model and key (OpenAI, OpenRouter, a gateway or a local model).
 3. **Sign in** to the sites you will use, in the app's own browser profile. Logins are remembered.
 4. **Create a project**, add 10-30 high-priority sites to the queue, generate posts, and start a session.

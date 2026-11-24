@@ -97,7 +97,7 @@ export default function AiSetup({ settings, onSaved, compact }: { settings: Sett
               <button type="button" className="font-medium text-gray-900 underline underline-offset-2" onClick={() => invoke('shell:openExternal', WRIAI_SIGNUP_URL)}>
                 Create one on wriai.com
               </button>{' '}
-              (free trial credits)
+              (API access needs an active Wriai plan)
             </span>
           </div>
         </div>
