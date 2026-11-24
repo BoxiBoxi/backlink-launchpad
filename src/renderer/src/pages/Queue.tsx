@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, Eraser, Globe, ListChecks, Loader2, LogIn, Pencil, Play, Plus, Radar, ScanLine, SkipForward, Sparkles, Square, Trash2, X } from 'lucide-react'
 import type { Content, SessionStatus, Task, TaskStatus } from '@shared/types'
 import type { PageProps } from '../App'
-import { invoke, useAction, useQuery, useRefresh, useToast } from '../lib'
+import { invoke, useAction, useIncremental, useQuery, useRefresh, useToast } from '../lib'
 import { Badge, Button, Card, Dropdown, Empty, Field, Input, Menu, Modal, PageHeader, Tabs, Toggle } from '../components/ui'
 import { LinkTypeBadge, priorityTone, SiteCell, SiteIcon, typeLabel } from '../components/site'
 import { ContentEditor } from './Content'
@@ -49,6 +49,18 @@ export default function Queue({ projectId, go }: PageProps) {
   const latestContent = (t: Task) =>
     (t.contentId ? contentMap.get(t.contentId) : undefined) ?? (contents.data ?? []).find((c) => c.siteId === t.siteId)
 
+  const all = tasks.data ?? []
+  const count = (pred: (t: Task) => boolean) => all.filter(pred).length
+  const isTodo = (t: Task) => t.status === 'queued' || t.status === 'opened'
+  const shownTasks = all
+    .filter((t) => view === 'all' || (view === 'todo' ? isTodo(t) : t.status === view))
+    .sort(
+      (a, b) =>
+        STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
+        (siteMap.get(b.siteId)?.priority ?? 0) - (siteMap.get(a.siteId)?.priority ?? 0)
+    )
+  const { visible: taskRows, sentinel } = useIncremental(shownTasks, `${view}|${projectId}`)
+
   if (!projectId || !project) {
     return (
       <>
@@ -63,16 +75,6 @@ export default function Queue({ projectId, go }: PageProps) {
     contents.reload()
   }
 
-  const all = tasks.data ?? []
-  const count = (pred: (t: Task) => boolean) => all.filter(pred).length
-  const isTodo = (t: Task) => t.status === 'queued' || t.status === 'opened'
-  const shownTasks = all
-    .filter((t) => view === 'all' || (view === 'todo' ? isTodo(t) : t.status === view))
-    .sort(
-      (a, b) =>
-        STATUS_ORDER[a.status] - STATUS_ORDER[b.status] ||
-        (siteMap.get(b.siteId)?.priority ?? 0) - (siteMap.get(a.siteId)?.priority ?? 0)
-    )
 
   const clear = async (statuses: TaskStatus[], what: string) => {
     const n = count((t) => statuses.includes(t.status))
@@ -216,7 +218,7 @@ export default function Queue({ projectId, go }: PageProps) {
               </tr>
             </thead>
             <tbody>
-              {shownTasks.map((t) => {
+              {taskRows.map((t) => {
                 const site = siteMap.get(t.siteId)
                 const c = latestContent(t)
                 return (
@@ -264,6 +266,7 @@ export default function Queue({ projectId, go }: PageProps) {
             </tbody>
           </table>
         )}
+        {sentinel}
       </Card>
 
       <Modal

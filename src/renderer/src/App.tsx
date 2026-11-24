@@ -29,6 +29,10 @@ export interface PageProps {
   setProjectId: (id: number | null) => void
   go: (p: Page) => void
   refreshProjects: () => void
+  /** Open Projects with the "New project" form already open. */
+  createProject: () => void
+  newProjectRequested: boolean
+  clearNewProjectRequest: () => void
 }
 
 function Shell() {
@@ -37,6 +41,11 @@ function Shell() {
   const projects = useQuery('projects:list')
   const toast = useToast()
   const [guideOpen, setGuideOpen] = useState(false)
+  const [newProjectRequested, setNewProjectRequested] = useState(false)
+  const createProject = () => {
+    setNewProjectRequested(true)
+    setPage('projects')
+  }
 
   // First run: show the setup guide until it is finished or skipped (existing users with projects skip it).
   useEffect(() => {
@@ -68,7 +77,15 @@ ${e.url}`, {
     if (projectId !== null && projects.data && !projects.data.some((p) => p.id === projectId)) setProjectId(projects.data[0]?.id ?? null)
   }, [projects.data, projectId])
 
-  const props: PageProps = { projectId, setProjectId, go: setPage, refreshProjects: projects.reload }
+  const props: PageProps = {
+    projectId,
+    setProjectId,
+    go: setPage,
+    refreshProjects: projects.reload,
+    createProject,
+    newProjectRequested,
+    clearNewProjectRequest: () => setNewProjectRequested(false)
+  }
 
   return (
     <div className="flex h-full">
@@ -105,14 +122,11 @@ ${e.url}`, {
             </button>
           ))}
         </nav>
-        <div className="px-3 pb-2">
+        <div className="px-3 pb-4">
           <button onClick={() => setGuideOpen(true)} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-900">
             <Compass className="size-4" />
             Setup guide
           </button>
-        </div>
-        <div className="px-5 pb-4 text-[11px] leading-relaxed text-gray-400">
-          Human in the loop: the app fills drafts, you review and submit.
         </div>
       </aside>
       {guideOpen && (
@@ -121,11 +135,11 @@ ${e.url}`, {
             setGuideOpen(false)
             requestRefresh()
           }}
-          onCreateProject={() => setPage('projects')}
+          onCreateProject={createProject}
         />
       )}
       <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-7xl px-8 py-8">
+        <div className="px-8 py-8">
           {page === 'dashboard' && <Dashboard {...props} />}
           {page === 'projects' && <Projects {...props} />}
           {page === 'catalog' && <Catalog {...props} />}

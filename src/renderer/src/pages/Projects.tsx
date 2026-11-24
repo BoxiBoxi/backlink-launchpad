@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FolderKanban, ImageIcon, ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react'
 import type { Project, ProjectInput } from '@shared/types'
 import type { PageProps } from '../App'
@@ -18,9 +18,16 @@ const blank: ProjectInput = {
   targets: [{ url: '', anchors: [] }]
 }
 
-export default function Projects({ refreshProjects, setProjectId }: PageProps) {
+export default function Projects({ refreshProjects, setProjectId, newProjectRequested, clearNewProjectRequest }: PageProps) {
   const projects = useQuery('projects:list')
   const [editing, setEditing] = useState<(ProjectInput & { id?: number }) | null>(null)
+  const startNew = () => setEditing({ ...blank, targets: [{ url: '', anchors: [] }] })
+  useEffect(() => {
+    if (newProjectRequested) {
+      startNew()
+      clearNewProjectRequest()
+    }
+  }, [newProjectRequested])
   const { busy, run } = useAction()
 
   const save = async () => {
@@ -47,7 +54,7 @@ export default function Projects({ refreshProjects, setProjectId }: PageProps) {
       <PageHeader
         title="Projects"
         subtitle="Brand profiles for the sites you promote. The AI uses them to write each post."
-        actions={<Button variant="primary" icon={<Plus className="size-4" />} onClick={() => setEditing({ ...blank, targets: [{ url: '', anchors: [] }] })}>New project</Button>}
+        actions={<Button variant="primary" icon={<Plus className="size-4" />} onClick={startNew}>New project</Button>}
       />
       {projects.data?.length === 0 && (
         <Card>

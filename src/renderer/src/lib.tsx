@@ -132,3 +132,23 @@ export function useRefresh(fn: () => void) {
     return () => window.removeEventListener(REFRESH_EVENT, fn)
   }, [fn])
 }
+
+/**
+ * Render long lists in chunks: the first `step` items now, more as the sentinel scrolls into view.
+ * Keeps page switches instant with hundreds of rows. Pass the filters as resetKey to start again from the top.
+ */
+export function useIncremental<T>(items: T[], resetKey = '', step = 60) {
+  const [limit, setLimit] = useState(step)
+  const [node, setNode] = useState<HTMLDivElement | null>(null)
+  useEffect(() => setLimit(step), [resetKey, step])
+  const more = Math.max(0, items.length - limit)
+  useEffect(() => {
+    if (!node || more <= 0) return
+    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setLimit((l) => l + step), { rootMargin: '600px' })
+    io.observe(node)
+    return () => io.disconnect()
+  }, [node, more, step])
+  const visible = more > 0 ? items.slice(0, limit) : items
+  const sentinel = more > 0 ? <div ref={setNode} className="py-4 text-center text-xs text-gray-400">Loading {more} more…</div> : null
+  return { visible, sentinel }
+}

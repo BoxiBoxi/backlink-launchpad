@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Activity, BarChart3, ExternalLink, Pencil, Plus, Search, Trash2 } from 'lucide-react'
 import type { Site, SiteInput } from '@shared/types'
 import type { PageProps } from '../App'
-import { fmtDate, invoke, useAction, useQuery, useToast } from '../lib'
+import { fmtDate, invoke, useAction, useIncremental, useQuery, useToast } from '../lib'
 import { Badge, Button, Card, Dropdown, Field, Input, ListInput, Menu, Modal, PageHeader, Textarea, Toggle } from '../components/ui'
 import { AliveBadge, DrValue, LangBadge, LinkTypeBadge, PriorityScore, SiteCell, TYPE_OPTIONS, TypeBadge } from '../components/site'
 
@@ -52,6 +52,7 @@ export default function Catalog(_: PageProps) {
         .sort((a, b) => (sort === 'dr' ? (b.dr ?? -1) - (a.dr ?? -1) || b.priority - a.priority : 0)),
     [sites.data, q, type, lang, tier, sort]
   )
+  const { visible: rows, sentinel } = useIncremental(shown, `${q}|${type}|${lang}|${tier}|${sort}`)
 
   const fetchDr = async (force: boolean) => {
     const ids = shown.map((s) => s.id)
@@ -147,7 +148,7 @@ ${r.error}` : ''}`)
             </tr>
           </thead>
           <tbody>
-            {shown.map((s) => (
+            {rows.map((s) => (
               <tr key={s.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
                 <td className="px-4 py-3"><PriorityScore value={s.priority} /></td>
                 <td className="max-w-[18rem] px-3 py-3" title={s.rules}>
@@ -174,6 +175,7 @@ ${r.error}` : ''}`)
             ))}
           </tbody>
         </table>
+        {sentinel}
       </Card>
       {(sites.data ?? []).some((s) => s.dr !== null) && (
         // Required by the Ahrefs Domain Rating license: attribution next to displayed DR values.
