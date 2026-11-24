@@ -1342,6 +1342,17 @@
     "maxLength": 600
   },
   {
+    "name": "Vui Coding (Launch Board)",
+    "url": "https://vuicoding.me",
+    "submitUrl": "https://vuicoding.me/launch-board",
+    "type": "launch",
+    "language": "vi",
+    "priority": 56,
+    "format": "plain",
+    "topics": ["programming", "developer-tools", "launch", "ai", "saas"],
+    "rules": "Free Vietnamese dev hub; sign in with Google, paste your product link on the Launch Board ('Khoe ngay'). Boosting to the top costs coins. Product CTA links are dofollow with a utm_source tag; no published posting rules."
+  },
+  {
     "name": "Reddit r/webdev",
     "url": "https://www.reddit.com/r/webdev",
     "submitUrl": "https://www.reddit.com/r/webdev/submit",
@@ -1535,6 +1546,29 @@
     "rules": "Large AI tools directory; free/paid submission reportedly. Verify.",
     "needsReview": true,
     "maxLength": 600
+  },
+  {
+    "name": "TiniX Repo Trending",
+    "url": "https://repo.tinix.ai",
+    "submitUrl": "https://repo.tinix.ai/en/submit",
+    "type": "directory",
+    "language": "vi",
+    "priority": 54,
+    "format": "plain",
+    "topics": ["open source", "github", "ai", "developer-tools"],
+    "rules": "Free submission of a GitHub/HuggingFace repo or custom project (vi/en UI, has a Vietnamese Trending section); you can also write a community story at /en/community. Duplicates and invalid links are ignored; links are dofollow."
+  },
+  {
+    "name": "Chợ Dev (Launch)",
+    "url": "https://chodev.pro",
+    "submitUrl": "https://chodev.pro/launch",
+    "type": "launch",
+    "language": "vi",
+    "priority": 54,
+    "format": "plain",
+    "topics": ["ai", "saas", "developer-tools", "launch"],
+    "rules": "Vietnamese product launch board; sign in with Google. Follow the anti-gaming rules in /terms (no vote manipulation).",
+    "needsReview": true
   },
   {
     "name": "Tumblr",
@@ -1988,6 +2022,17 @@
     "rules": "Free indie-maker showcase; log in with an email code and add a logo, one-liner, story and up to 6 screenshots. Reviewed in 1-2 business days; links are ugc. Small, young community."
   },
   {
+    "name": "Chợ Dev Community",
+    "url": "https://chodev.pro/community",
+    "submitUrl": "https://chodev.pro/community",
+    "type": "community",
+    "language": "vi",
+    "priority": 50,
+    "format": "plain",
+    "topics": ["programming", "ai", "tech"],
+    "rules": "Free; log in and use 'Tạo bài viết'. Text and links only (no image/video uploads); AI moderation blocks spam and scams. Post links are dofollow."
+  },
+  {
     "name": "Google Sites",
     "url": "https://sites.google.com",
     "submitUrl": "https://sites.google.com/new",
@@ -2320,6 +2365,30 @@
     "needsReview": true
   },
   {
+    "name": "GoSeedUp Launchpad",
+    "url": "https://goseedup.com",
+    "submitUrl": "https://goseedup.com/register?role=brand",
+    "type": "launch",
+    "language": "vi",
+    "priority": 46,
+    "format": "plain",
+    "topics": ["startup", "saas", "ai", "launch"],
+    "rules": "Register as a brand, then post your project to the Launchpad for free; paid seeding campaigns are optional. Listing links are nofollow.",
+    "needsReview": true
+  },
+  {
+    "name": "F8 Blog",
+    "url": "https://f8.edu.vn/blog",
+    "submitUrl": "https://f8.edu.vn/blog/new",
+    "type": "ugc_blog",
+    "language": "vi",
+    "priority": 46,
+    "format": "markdown",
+    "topics": ["programming", "web development", "javascript"],
+    "rules": "Free blog on the popular F8 coding school site; login required. Write web-dev tutorials or experiences, not ads.",
+    "needsReview": true
+  },
+  {
     "name": "GitHub Gist",
     "url": "https://gist.github.com",
     "submitUrl": "https://gist.github.com/",
@@ -2616,6 +2685,18 @@
     "format": "plain",
     "topics": ["ai", "ai-tools"],
     "rules": "Free; includes per-country rankings (e.g. top AI tools in Vietnam). Tool needs its own domain/subdomain and a significant AI component; inclusion at their discretion, review up to 21 days."
+  },
+  {
+    "name": "KITBLOG",
+    "url": "https://kitblog.vn",
+    "submitUrl": "https://kitblog.vn/account/article/new",
+    "type": "ugc_blog",
+    "language": "vi",
+    "priority": 44,
+    "format": "plain",
+    "topics": ["content", "programming", "marketing", "branding"],
+    "rules": "Vietnamese blogging platform; log in with Google or username to write articles under /@username. No published rules, so write genuine content.",
+    "needsReview": true
   },
   {
     "name": "Paragraph",
@@ -4260,6 +4341,18 @@
     "needsReview": true
   },
   {
+    "name": "ShareCode.vn",
+    "url": "https://sharecode.vn",
+    "submitUrl": "https://sharecode.vn/code-upload-cua-toi.htm",
+    "type": "directory",
+    "language": "vi",
+    "priority": 34,
+    "format": "plain",
+    "topics": ["source code", "programming"],
+    "rules": "Vietnamese source-code sharing marketplace; register (email/Google/Facebook) and upload code, free (0 Xu) or paid. Follow 'Quy định chung' and the code-selling policy.",
+    "needsReview": true
+  },
+  {
     "name": "Linkhay",
     "url": "https://linkhay.com",
     "submitUrl": "https://linkhay.com/",
@@ -5087,6 +5180,30 @@
     "maxLength": 600
   },
   {
+    "name": "LCOJ - Luyện Code",
+    "url": "https://luyencode.net",
+    "submitUrl": "https://luyencode.net/posts/new",
+    "type": "community",
+    "language": "vi",
+    "priority": 28,
+    "format": "markdown",
+    "topics": ["programming", "algorithms"],
+    "rules": "Vietnamese online judge with member blog posts; register first. Only algorithm/programming content fits.",
+    "needsReview": true
+  },
+  {
+    "name": "DevOps VietNam",
+    "url": "https://devops.vn",
+    "submitUrl": "https://devops.vn/support/",
+    "type": "ugc_blog",
+    "language": "vi",
+    "priority": 28,
+    "format": "plain",
+    "topics": ["devops", "cloud", "programming"],
+    "rules": "No self-serve posting: apply to become an author via the support form (with CV link). DevOps/Cloud/SRE content only.",
+    "needsReview": true
+  },
+  {
     "name": "VNOJ Blog (VNOI)",
     "url": "https://oj.vnoi.info",
     "submitUrl": "https://oj.vnoi.info/posts/",
@@ -5232,6 +5349,17 @@
     "maxLength": 600
   },
   {
+    "name": "made_by_vietnamese (GitHub list)",
+    "url": "https://github.com/grokking-vietnam/made_by_vietnamese",
+    "submitUrl": "https://github.com/grokking-vietnam/made_by_vietnamese",
+    "type": "directory",
+    "language": "en",
+    "priority": 26,
+    "format": "markdown",
+    "topics": ["open source"],
+    "rules": "Add via pull request; project must be open source, made or majorly contributed by a Vietnamese developer and active. README links are nofollow."
+  },
+  {
     "name": "V7N Forums",
     "url": "https://forums.v7n.com",
     "submitUrl": "https://forums.v7n.com/",
@@ -5304,6 +5432,29 @@
     "rules": "Website review directory; free basic entry. Low value; reportedly dofollow per a third-party list.",
     "needsReview": true,
     "maxLength": 600
+  },
+  {
+    "name": "Kênh Sinh Viên",
+    "url": "https://kenhsinhvien.vn",
+    "submitUrl": "https://kenhsinhvien.vn/f/cong-nghe.375/",
+    "type": "forum",
+    "language": "vi",
+    "priority": 24,
+    "format": "plain",
+    "topics": ["tech", "students"],
+    "rules": "General student forum; register and post in the 'Công nghệ' section. Weak fit, avoid overt promotion.",
+    "needsReview": true
+  },
+  {
+    "name": "awesome-vietnamese (GitHub list)",
+    "url": "https://github.com/virusvn/awesome-vietnamese",
+    "submitUrl": "https://github.com/virusvn/awesome-vietnamese",
+    "type": "directory",
+    "language": "vi",
+    "priority": 24,
+    "format": "markdown",
+    "topics": ["open source"],
+    "rules": "Add via pull request; needs over 50% Vietnamese contributors and at least 100 stars+forks combined. README links are nofollow."
   },
   {
     "name": "Mix",
