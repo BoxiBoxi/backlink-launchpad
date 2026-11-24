@@ -191,6 +191,6 @@ export function parseJsonReply<T>(content: string): T {
   const raw = fenced ? fenced[1] : content
   const start = raw.indexOf('{')
   const end = raw.lastIndexOf('}')
-  if (start < 0 || end <= start) throw new Error('AI reply did not contain a JSON object')
+  if (start < 0 || end <= start) throw new Error(`AI reply did not contain a JSON object: ${content.trim().slice(0, 160) || '(empty reply)'}`)
   return JSON.parse(raw.slice(start, end + 1)) as T
 }
