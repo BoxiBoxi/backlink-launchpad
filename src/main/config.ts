@@ -81,8 +81,9 @@ export function getSettings(): Settings {
     bravePath: getBravePath() || '',
     profileDir: profileDir(),
     linkCheckIntervalHours: Number(settingsRepo.get('linkCheckIntervalHours') || 24),
-    aiEndpoint: gws[0]?.url || '',
-    aiModel: gws[0] ? gws[0].models.join(' | ') : parseModelList(process.env.OPENAI_TEXT_MODEL).join(' | '),
+    // Nothing configured yet: show the standard OpenAI endpoint and a default model, so "paste your key" is enough.
+    aiEndpoint: gws[0]?.url || settingsRepo.get('aiEndpoint') || process.env.OPENAI_END_POINT || 'https://api.openai.com/v1',
+    aiModel: gws[0] ? gws[0].models.join(' | ') : parseModelList(settingsRepo.get('aiModel') || process.env.OPENAI_TEXT_MODEL, ['gpt-4.1-mini']).join(' | '),
     aiApiKeySet: gws.length > 0,
     ahrefsKeySet: !!ahrefsKey()
   }
