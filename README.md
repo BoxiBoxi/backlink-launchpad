@@ -6,6 +6,29 @@
 <p align="center"><b>by <a href="https://wriai.com">Wriai</a></b> · plan, write and track launch posts and backlinks on 400+ directories and communities</p>
 
 <p align="center">
+  <a href="https://github.com/BoxiBoxi/backlink-launchpad/releases/latest"><img src="https://img.shields.io/github/v/release/BoxiBoxi/backlink-launchpad?color=10B981&label=release" alt="Latest release" /></a>
+  <a href="https://github.com/BoxiBoxi/backlink-launchpad/releases"><img src="https://img.shields.io/github/downloads/BoxiBoxi/backlink-launchpad/total?color=0EA5E9&label=downloads" alt="Downloads" /></a>
+  <a href="https://github.com/BoxiBoxi/backlink-launchpad/actions/workflows/ci.yml"><img src="https://github.com/BoxiBoxi/backlink-launchpad/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/BoxiBoxi/backlink-launchpad?color=6366F1" alt="MIT license" /></a>
+  <img src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-111827" alt="Windows, macOS, Linux" />
+  <a href="https://github.com/BoxiBoxi/backlink-launchpad/stargazers"><img src="https://img.shields.io/github/stars/BoxiBoxi/backlink-launchpad?style=flat&color=F59E0B" alt="GitHub stars" /></a>
+</p>
+<p align="center">
+  <img src="https://img.shields.io/badge/Electron-47848F?logo=electron&logoColor=white" alt="Electron" />
+  <img src="https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-0F172A?logo=tailwindcss&logoColor=38BDF8" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white" alt="SQLite" />
+  <img src="https://img.shields.io/badge/AI-Wriai%20API%20%7C%20OpenAI--compatible-10B981" alt="AI: Wriai API or OpenAI-compatible" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/BoxiBoxi/backlink-launchpad/releases/latest"><img src="https://img.shields.io/badge/Download-Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download for Windows" /></a> <a href="https://github.com/BoxiBoxi/backlink-launchpad/releases/latest"><img src="https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS" /></a> <a href="https://github.com/BoxiBoxi/backlink-launchpad/releases/latest"><img src="https://img.shields.io/badge/Download-Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download for Linux" /></a>
+</p>
+
+<p align="center"><b>English</b> · <a href="README.vi.md">Tiếng Việt</a></p>
+
+<p align="center">
   <img src="docs/screenshots/hero.png" width="900" alt="Backlink Launchpad: dashboard, link monitor and site catalog" />
 </p>
 
