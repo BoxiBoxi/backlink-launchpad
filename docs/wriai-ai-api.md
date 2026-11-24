@@ -4,13 +4,13 @@ Backlink Launchpad can write content through Wriai instead of the user's own Ope
 The app only needs one OpenAI-compatible endpoint on wriai.com, authenticated with the user's existing
 developer key (`wri_live_...`, same keys as the Wriai REST API v1) and paid in Wriai credits.
 
-Status: **client implemented in this repo, server endpoint to be built in the Wriai app.**
+Status: **live on wriai.com** (client in `src/core/ai.ts`).
 
 ## Endpoint
 
 ```
 POST https://wriai.com/api/v1/ai/chat/completions
-Authorization: Bearer wri_live_xxx          (X-API-Key also accepted, as in lib/api-auth.ts)
+Authorization: Bearer wri_live_xxx          (X-API-Key also accepted)
 Content-Type: application/json
 ```
 
