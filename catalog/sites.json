@@ -195,6 +195,17 @@
     "needsReview": true
   },
   {
+    "name": "Unikorn",
+    "url": "https://unikorn.vn",
+    "submitUrl": "https://unikorn.vn/products/new",
+    "type": "launch",
+    "language": "vi",
+    "priority": 78,
+    "format": "plain",
+    "topics": ["startup", "saas", "ai", "launch", "developer-tools"],
+    "rules": "Free 'Product Hunt for Vietnamese makers'; makers must be Vietnamese or have Vietnamese team members. Tech products only (no agencies, blogs or company pages); the tagline must not repeat the name. Submissions get an AI check plus team review and go live at the next midnight launch. Outbound links are dofollow."
+  },
+  {
     "name": "Hacker News",
     "url": "https://news.ycombinator.com",
     "submitUrl": "https://news.ycombinator.com/submit",
@@ -891,6 +902,17 @@
     "rules": "Free and paid tiers; review queue. Reportedly dofollow on free listings.",
     "needsReview": true,
     "maxLength": 600
+  },
+  {
+    "name": "J2TEAM Launch",
+    "url": "https://launch.j2team.dev",
+    "submitUrl": "https://launch.j2team.dev/products/new",
+    "type": "launch",
+    "language": "vi",
+    "priority": 62,
+    "format": "plain",
+    "topics": ["startup", "saas", "ai", "launch", "developer-tools"],
+    "rules": "Free Product Hunt-style board of the Vietnamese J2TEAM dev community (vi/en); log in with Google or GitHub, products are reviewed manually. No spam or vote manipulation. Outbound links go through a noindex/nofollow redirect, so value is referral traffic, not link equity."
   },
   {
     "name": "StartupBase",
@@ -1955,6 +1977,17 @@
     "maxLength": 600
   },
   {
+    "name": "BIP - Build in Public Việt Nam",
+    "url": "https://bipvn.com",
+    "submitUrl": "https://bipvn.com/dang-san-pham/",
+    "type": "launch",
+    "language": "vi",
+    "priority": 50,
+    "format": "plain",
+    "topics": ["startup", "indie", "saas", "launch"],
+    "rules": "Free indie-maker showcase; log in with an email code and add a logo, one-liner, story and up to 6 screenshots. Reviewed in 1-2 business days; links are ugc. Small, young community."
+  },
+  {
     "name": "Google Sites",
     "url": "https://sites.google.com",
     "submitUrl": "https://sites.google.com/new",
@@ -2087,6 +2120,17 @@
     "rules": "Free submission with review; paid fast-track. Verify.",
     "needsReview": true,
     "maxLength": 600
+  },
+  {
+    "name": "Công cụ AI (congcuai.vn)",
+    "url": "https://congcuai.vn",
+    "submitUrl": "https://congcuai.vn/gui-cong-cu-ai/",
+    "type": "directory",
+    "language": "vi",
+    "priority": 48,
+    "format": "plain",
+    "topics": ["ai", "ai-tools"],
+    "rules": "Free Vietnamese AI tool directory, no login needed. Provide logo (max 1 MB), category, summary, pros/cons, how-to-use and pricing; use the edit-request form if the tool is already listed."
   },
   {
     "name": "Vocal Media",
@@ -2262,6 +2306,18 @@
     "rules": "AI newsletter/community; submissions reportedly accepted, selection editorial. Verify current form.",
     "needsReview": true,
     "maxLength": 600
+  },
+  {
+    "name": "ITviec Story Hub (Build & Share)",
+    "url": "https://itviec.com/story-hub",
+    "submitUrl": "https://itviec.com/story-hub/hubs/build-and-share",
+    "type": "ugc_blog",
+    "language": "vi",
+    "priority": 46,
+    "format": "plain",
+    "topics": ["programming", "developer-tools", "side-project"],
+    "rules": "Free; log in and use 'Viết bài mới'. IT-related content only, every post is reviewed by editors, so write a genuine build story rather than an ad.",
+    "needsReview": true
   },
   {
     "name": "GitHub Gist",
@@ -2551,6 +2607,17 @@
     "maxLength": 600
   },
   {
+    "name": "RankmyAI",
+    "url": "https://www.rankmyai.com",
+    "submitUrl": "https://www.rankmyai.com/tool-addition",
+    "type": "directory",
+    "language": "en",
+    "priority": 44,
+    "format": "plain",
+    "topics": ["ai", "ai-tools"],
+    "rules": "Free; includes per-country rankings (e.g. top AI tools in Vietnam). Tool needs its own domain/subdomain and a significant AI component; inclusion at their discretion, review up to 21 days."
+  },
+  {
     "name": "Paragraph",
     "url": "https://paragraph.com",
     "submitUrl": "https://paragraph.com/",
@@ -2812,6 +2879,29 @@
     "rules": "AI SEO-focused directory/news; submission terms unverified. Strong topical fit for an AI SEO writer.",
     "needsReview": true,
     "maxLength": 600
+  },
+  {
+    "name": "Kho Công Cụ AI",
+    "url": "https://www.khocongcuai.com",
+    "submitUrl": "https://www.khocongcuai.com/submit-tool",
+    "type": "directory",
+    "language": "vi",
+    "priority": 42,
+    "format": "plain",
+    "topics": ["ai", "ai-tools"],
+    "rules": "Vietnamese AI tool directory; requires login and listings are moderated before going public.",
+    "needsReview": true
+  },
+  {
+    "name": "Shipstry",
+    "url": "https://shipstry.com",
+    "submitUrl": "https://shipstry.com/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 42,
+    "format": "plain",
+    "topics": ["saas", "indie", "launch"],
+    "rules": "Weekly launches; free 'Harbor' tier is queued about 3 weeks out, paid tier skips the queue. Products must be real and usable now; follow /submission-guidelines."
   },
   {
     "name": "Write.as",
@@ -3125,6 +3215,52 @@
     "rules": "AI/SEO tools blog-directory; paid listing reportedly. Verify.",
     "needsReview": true,
     "maxLength": 600
+  },
+  {
+    "name": "Produk.co",
+    "url": "https://produk.co",
+    "submitUrl": "https://produk.co/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 40,
+    "format": "plain",
+    "topics": ["startup", "saas", "ai", "launch"],
+    "rules": "Free Indonesia/SEA launch platform with weekly voting; accepts non-Indonesian products in English. Needs 3+ features, 2 FAQs, 1-5 images (16:10) and 1-3 alternatives. Link is dofollow only if you place their badge.",
+    "needsReview": true
+  },
+  {
+    "name": "IndieHunt",
+    "url": "https://indiehunt.io",
+    "submitUrl": "https://indiehunt.io/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 40,
+    "format": "plain",
+    "topics": ["indie", "saas", "launch"],
+    "rules": "Weekly launches with 15 free slots (badge required) or paid Premium. Free links are nofollow unless top 3; duplicates and unreachable URLs are rejected."
+  },
+  {
+    "name": "DeepLaunch",
+    "url": "https://deeplaunch.io",
+    "submitUrl": "https://deeplaunch.io/submit",
+    "type": "directory",
+    "language": "en",
+    "priority": 40,
+    "format": "plain",
+    "topics": ["ai", "saas"],
+    "rules": "Free (5/day) with a badge that must stay on your site or the link becomes nofollow; paid tiers skip the queue. Description 500-3,000 characters and a working product.",
+    "maxLength": 3000
+  },
+  {
+    "name": "StartupDope",
+    "url": "https://startupdope.com",
+    "submitUrl": "https://startupdope.com/submit/new",
+    "type": "directory",
+    "language": "en",
+    "priority": 40,
+    "format": "plain",
+    "topics": ["startup", "saas"],
+    "rules": "Free listing reviewed in 7-14 business days (paid priority option); no account needed. Editors require a working demo, clear pricing and a named founder. Links are dofollow."
   },
   {
     "name": "Hive (PeakD)",
@@ -3482,6 +3618,40 @@
     "maxLength": 600
   },
   {
+    "name": "UpNewsFeed",
+    "url": "https://www.upnewsfeed.com",
+    "submitUrl": "https://www.upnewsfeed.com/submit",
+    "type": "community",
+    "language": "vi",
+    "priority": 38,
+    "format": "plain",
+    "topics": ["startup", "tech", "developer-tools"],
+    "rules": "Vietnamese community for developers, designers and founders; log in with GitHub or Discord. 'Show product' posts are welcome but must follow community standards.",
+    "needsReview": true
+  },
+  {
+    "name": "Noonlaunch",
+    "url": "https://noonlaunch.com",
+    "submitUrl": "https://noonlaunch.com/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 38,
+    "format": "plain",
+    "topics": ["saas", "launch"],
+    "rules": "Weekly Monday launches; free Standard tier is queued and admin-reviewed (no badge needed). Free links are nofollow unless weekly top 3; only free launches can win the week."
+  },
+  {
+    "name": "TinyLaunchpad",
+    "url": "https://tinylaunchpad.com",
+    "submitUrl": "https://tinylaunchpad.com/projects/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 38,
+    "format": "plain",
+    "topics": ["saas", "side-project", "launch"],
+    "rules": "Weekly Monday launches, every product reviewed by the team. Free links are nofollow; dofollow for the top 3 or paid Premium."
+  },
+  {
     "name": "Mataroa",
     "url": "https://mataroa.blog",
     "submitUrl": "https://mataroa.blog/",
@@ -3718,6 +3888,51 @@
     "rules": "AI tools directory; free/paid. Verify.",
     "needsReview": true,
     "maxLength": 600
+  },
+  {
+    "name": "VC4A Ventures",
+    "url": "https://vc4a.com",
+    "submitUrl": "https://vc4a.com/ventures/add/",
+    "type": "directory",
+    "language": "en",
+    "priority": 36,
+    "format": "plain",
+    "topics": ["startup"],
+    "rules": "Free startup profile; listed by country (Vietnam page: /ventures/country/vietnam/). Fill the profile completely.",
+    "needsReview": true
+  },
+  {
+    "name": "ProductFame",
+    "url": "https://productfame.com",
+    "submitUrl": "https://productfame.com/products/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 36,
+    "format": "plain",
+    "topics": ["saas", "ai", "launch"],
+    "rules": "3 daily launch slots; free tier needs DR 5+, a badge on your site and can queue up to 180 days. Free links are nofollow; dofollow only for the daily top 3 or paid."
+  },
+  {
+    "name": "ufind.best",
+    "url": "https://ufind.best",
+    "submitUrl": "https://ufind.best/products/create",
+    "type": "launch",
+    "language": "en",
+    "priority": 36,
+    "format": "plain",
+    "topics": ["ai", "saas", "launch"],
+    "rules": "Weekly launches; free tier is queued and requires their badge or the listing is unpublished. Free links are nofollow unless top 3; rules at /submit.md."
+  },
+  {
+    "name": "Awesome Indie",
+    "url": "https://awesomeindie.com",
+    "submitUrl": "https://awesomeindie.com/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 36,
+    "format": "plain",
+    "topics": ["indie", "saas", "launch"],
+    "rules": "Free daily launches with weekly/monthly/yearly rankings; paid boosts available. Product links are nofollow; has a Vietnam maker page."
   },
   {
     "name": "Telegraph",
@@ -4031,6 +4246,18 @@
     "rules": "AI tools directory; free/paid. Verify.",
     "needsReview": true,
     "maxLength": 600
+  },
+  {
+    "name": "Launch Vault",
+    "url": "https://www.launchvault.dev",
+    "submitUrl": "https://www.launchvault.dev/projects/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 34,
+    "format": "plain",
+    "topics": ["developer-tools", "saas", "launch"],
+    "rules": "Weekly launches with 25 free slots; the badge on your site is verified first. Dofollow for the weekly top 3 with badge, or paid.",
+    "needsReview": true
   },
   {
     "name": "Linkhay",
@@ -4600,6 +4827,78 @@
     "rules": "Lifetime-deal marketplace; revenue share, vetting. Free to apply.",
     "needsReview": true,
     "maxLength": 600
+  },
+  {
+    "name": "TopAIHay",
+    "url": "https://topaihay.com",
+    "submitUrl": "https://topaihay.com/gui-tool/",
+    "type": "directory",
+    "language": "vi",
+    "priority": 30,
+    "format": "plain",
+    "topics": ["ai", "ai-tools"],
+    "rules": "Vietnamese AI tool directory; the submit page returned 404 when checked (Nov 2026), paid ads available at /quang-cao/.",
+    "needsReview": true
+  },
+  {
+    "name": "EarlyHunt",
+    "url": "https://earlyhunt.com",
+    "submitUrl": "https://earlyhunt.com/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 30,
+    "format": "plain",
+    "topics": ["saas", "tools", "launch"],
+    "rules": "Free launch with badge (nofollow); paid Premium is dofollow. On the free tier only the top 3 get dofollow.",
+    "needsReview": true
+  },
+  {
+    "name": "Aura++",
+    "url": "https://auraplusplus.com",
+    "submitUrl": "https://auraplusplus.com/projects/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 30,
+    "format": "plain",
+    "topics": ["saas", "indie", "open source", "launch"],
+    "rules": "Free launch plus paid Premium tiers; free project links are nofollow. Sign in required.",
+    "needsReview": true
+  },
+  {
+    "name": "Stellar Launch",
+    "url": "https://www.stellarlaunch.org",
+    "submitUrl": "https://www.stellarlaunch.org/projects/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 30,
+    "format": "plain",
+    "topics": ["saas", "ai", "launch"],
+    "rules": "Daily launches at 08:00 UTC; free queue can be up to 360 days. Free listings get dofollow only in the daily top 3.",
+    "needsReview": true
+  },
+  {
+    "name": "FastLaunch",
+    "url": "https://fastlaunch.io",
+    "submitUrl": "https://fastlaunch.io/projects/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 30,
+    "format": "plain",
+    "topics": ["saas", "indie", "launch"],
+    "rules": "Daily launches with 5 free slots/day (queue up to 365 days). Dofollow for the daily top 3 or paid Premium.",
+    "needsReview": true
+  },
+  {
+    "name": "ShinyLaunch",
+    "url": "https://shinylaunch.com",
+    "submitUrl": "https://shinylaunch.com/submit",
+    "type": "launch",
+    "language": "en",
+    "priority": 30,
+    "format": "plain",
+    "topics": ["ai", "saas", "launch"],
+    "rules": "Weekly launches, Google login only; most listings are nofollow and pricing is shown only after login. Sister site LaunchClash belongs to the same network.",
+    "needsReview": true
   },
   {
     "name": "Giải Pháp Excel",
