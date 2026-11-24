@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BookOpen, Compass, FolderKanban, LayoutDashboard, Link2, ListChecks, Settings as SettingsIcon } from 'lucide-react'
+import { BookOpen, Compass, FolderKanban, LayoutDashboard, Link2, Send, Settings as SettingsIcon } from 'lucide-react'
 import { invoke, requestRefresh, ToastProvider, useQuery, useToast } from './lib'
 import { Dropdown } from './components/ui'
 import SetupGuide from './components/SetupGuide'
@@ -17,7 +17,7 @@ const NAV: { id: Page; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'projects', label: 'Projects', icon: FolderKanban },
   { id: 'catalog', label: 'Site catalog', icon: BookOpen },
-  { id: 'queue', label: 'Posting queue', icon: ListChecks },
+  { id: 'queue', label: 'Publish', icon: Send },
   { id: 'links', label: 'Link monitor', icon: Link2 },
   { id: 'settings', label: 'Settings', icon: SettingsIcon }
 ]

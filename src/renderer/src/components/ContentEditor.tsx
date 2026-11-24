@@ -1,5 +1,5 @@
 // Edit one generated post: title, body (WYSIWYG / HTML / preview), link, tags, status, PDF export,
-// and Regenerate with optional extra instructions. Opened from the Posting queue.
+// and Regenerate with optional extra instructions. Opened from the Publish page.
 import { useEffect, useState } from 'react'
 import { Copy, FileDown, RefreshCw } from 'lucide-react'
 import type { Content, ContentFormat } from '@shared/types'

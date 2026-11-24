@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from 'react'
 import { Check, ChevronDown, Loader2, X } from 'lucide-react'
 
-type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'soft'
 
 export function Button({
   variant = 'secondary',
@@ -16,7 +16,8 @@ export function Button({
     primary: 'bg-gray-900 text-white hover:bg-gray-800 border border-gray-900',
     secondary: 'bg-white text-gray-800 border border-gray-200 hover:bg-gray-50',
     ghost: 'text-gray-600 hover:bg-gray-100 border border-transparent',
-    danger: 'bg-white text-red-600 border border-red-200 hover:bg-red-50'
+    danger: 'bg-white text-red-600 border border-red-200 hover:bg-red-50',
+    soft: 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
   }
   const sizes = size === 'sm' ? 'h-8 px-3 text-xs gap-1.5' : 'h-9 px-4 text-sm gap-2'
   return (

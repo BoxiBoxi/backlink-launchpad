@@ -149,7 +149,7 @@ export default function SetupGuide({ onClose, onCreateProject }: { onClose: () =
                   Open the login window
                 </Button>
               </div>
-              <p className="text-xs text-gray-400">You can do this any time from Posting queue, Brave login window.</p>
+              <p className="text-xs text-gray-400">You can do this any time from Publish, Login window.</p>
             </div>
           )}
 
@@ -162,7 +162,7 @@ export default function SetupGuide({ onClose, onCreateProject }: { onClose: () =
               <ol className="grid gap-2 text-sm text-gray-700">
                 <li><b>1. Projects:</b> name, description, target URLs and anchors, logo and screenshots.</li>
                 <li><b>2. Site catalog:</b> filter by priority or DR, Fetch DR if you have an Ahrefs key.</li>
-                <li><b>3. Posting queue:</b> add 10 to 30 high-priority sites, generate posts, then Start session.</li>
+                <li><b>3. Publish:</b> add 10 to 30 high-priority sites, generate posts, then Start session.</li>
                 <li><b>4. Link monitor:</b> check which links are live and dofollow.</li>
               </ol>
               <div className="grid gap-1 rounded-xl border border-gray-200 bg-gray-50 p-4 text-xs text-gray-500">

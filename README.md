@@ -19,8 +19,8 @@ everything, and you review and click submit yourself.
 | --- | --- |
 | **Site catalog** | 414 places to publish: AI/SaaS directories, launch platforms, UGC blogs, communities, forums, Q&A (English and Vietnamese). Each has a priority score (0-100), Ahrefs DR (one click, free), type, language, link rules and an alive check. |
 | **Projects** | A brand profile per product: description, target URLs with anchor texts, logo and screenshots. |
-| **AI writing** | In the posting queue, one click writes a unique, value-first post per site, in that site's language, length and format (HTML, Markdown or plain text). WYSIWYG editor, preview, Regenerate with your own instructions, and PDF export (for Yumpu, Issuu, Scribd, SlideShare). |
-| **Posting queue** | Opens each submit page in a separate browser profile, fills title and body, attaches logo and screenshots. **Start session** walks the queue by priority and saves the live post URL automatically when you publish (with Undo). |
+| **AI writing** | On the Publish page, one click writes a unique, value-first post per site, in that site's language, length and format (HTML, Markdown or plain text). WYSIWYG editor, preview, Regenerate with your own instructions, and PDF export (for Yumpu, Issuu, Scribd, SlideShare). |
+| **Publish** | Opens each submit page in a separate browser profile, fills title and body, attaches logo and screenshots. **Start session** walks the queue by priority and saves the live post URL automatically when you publish (with Undo). |
 | **Link monitor** | Re-checks every placed link: page live, link present, `rel` (dofollow, nofollow, ugc, sponsored), anchor text. |
 
 ## Responsible use
@@ -51,7 +51,7 @@ A setup guide opens on first launch (reopen it any time from **Setup guide** in 
      Generation is billed in Wriai credits by characters written. API keys need an active paid Wriai plan.
    - **OpenAI-compatible**: your own endpoint, model and key (OpenAI, OpenRouter, a gateway or a local model).
 3. **Sign in** to the sites you will use, in the app's own browser profile. Logins are remembered.
-4. **Create a project**, add 10-30 high-priority sites to the queue, generate posts, and start a session.
+4. **Create a project**, add 10-30 high-priority sites on the Publish page, generate posts, and start a session.
 
 Optional: add an Ahrefs API key in Settings to fill the DR column (uses the free DR endpoint, 0 API units).
 Once a site's DR is known, its priority becomes 70% the researched score and 30% DR; a priority you edit by hand is kept.

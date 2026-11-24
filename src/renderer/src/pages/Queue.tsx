@@ -64,7 +64,7 @@ export default function Queue({ projectId, go }: PageProps) {
   if (!projectId || !project) {
     return (
       <>
-        <PageHeader title="Posting queue" />
+        <PageHeader title="Publish" />
         <Card><Empty icon={<ListChecks className="size-6" />} title="Select or create a project first" action={<Button variant="primary" onClick={() => go('projects')}>Projects</Button>} /></Card>
       </>
     )
@@ -109,7 +109,7 @@ export default function Queue({ projectId, go }: PageProps) {
   return (
     <>
       <PageHeader
-        title="Posting queue"
+        title="Publish"
         subtitle="Open a task: Brave goes to the submit page and pre-fills what it can. You review, sign in, solve CAPTCHAs and submit yourself."
         actions={
           <>
@@ -211,7 +211,6 @@ export default function Queue({ projectId, go }: PageProps) {
             <thead className="border-b border-gray-100 bg-gray-50/60 text-left text-xs uppercase tracking-wide text-gray-500">
               <tr>
                 <th className="px-4 py-3 font-medium">Site</th>
-                <th className="px-3 py-3 font-medium">Content</th>
                 <th className="px-3 py-3 font-medium">Link</th>
                 <th className="px-3 py-3 font-medium">Status</th>
                 <th className="px-3 py-3" />
@@ -230,16 +229,6 @@ export default function Queue({ projectId, go }: PageProps) {
                         <span className="text-gray-400">Deleted site</span>
                       )}
                     </td>
-                    <td className="max-w-[15rem] px-3 py-3">
-                      {c ? (
-                        <button className="flex max-w-full items-center gap-1.5 text-left text-gray-700 hover:text-gray-900" onClick={() => setEditing(c)}>
-                          <Pencil className="size-3.5 shrink-0 text-gray-400" />
-                          <span className="truncate">{c.title || '(untitled)'}</span>
-                        </button>
-                      ) : (
-                        <Button size="sm" icon={<Sparkles className="size-3.5" />} loading={busy === `gen-${t.id}`} onClick={() => generate(t)}>Generate</Button>
-                      )}
-                    </td>
                     <td className="px-3 py-3">
                       {t.postUrl ? (
                         <button className="block max-w-44 truncate text-left text-xs text-gray-600 underline" title={t.postUrl} onClick={() => invoke('shell:openExternal', t.postUrl)}>{t.postUrl}</button>
@@ -250,6 +239,11 @@ export default function Queue({ projectId, go }: PageProps) {
                     <td className="px-3 py-3"><Badge tone={statusTone[t.status]}>{t.status}</Badge></td>
                     <td className="w-px whitespace-nowrap px-3 py-3">
                       <div className="flex justify-end gap-1">
+                        {c ? (
+                          <Button size="sm" variant="soft" className="w-28" icon={<Pencil className="size-3.5" />} title={c.title || '(untitled)'} onClick={() => setEditing(c)}>Edit post</Button>
+                        ) : (
+                          <Button size="sm" className="w-28" icon={<Sparkles className="size-3.5" />} loading={busy === `gen-${t.id}`} onClick={() => generate(t)}>Generate</Button>
+                        )}
                         {t.status !== 'posted' && (
                           <>
                             <Button size="sm" variant="primary" icon={<Globe className="size-3.5" />} loading={busy === `open-${t.id}`} onClick={() => open(t)}>Open</Button>

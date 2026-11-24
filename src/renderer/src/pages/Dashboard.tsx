@@ -131,7 +131,7 @@ export default function Dashboard({ setProjectId, go, createProject }: PageProps
                   <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-4">
                     <Button size="sm" variant="ghost" icon={<PenLine className="size-3.5" />} onClick={() => open(p.id, 'queue')}>{s?.drafts ?? 0} drafts</Button>
                     <Button size="sm" variant="ghost" icon={<Link2 className="size-3.5" />} onClick={() => open(p.id, 'links')}>Links</Button>
-                    <Button size="sm" className="ml-auto" icon={<ArrowRight className="size-3.5" />} onClick={() => open(p.id, 'queue')}>Posting queue</Button>
+                    <Button size="sm" className="ml-auto" icon={<ArrowRight className="size-3.5" />} onClick={() => open(p.id, 'queue')}>Publish</Button>
                   </div>
                 </Card>
               )
