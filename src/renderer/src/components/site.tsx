@@ -51,7 +51,7 @@ export const priorityTone = (v: number) =>
 export function PriorityScore({ value }: { value: number }) {
   const t = priorityTone(value)
   return (
-    <div className="flex items-center gap-2" title={`Priority ${value}/100: relevance + authority + cost/effort + link value (not DA/DR)`}>
+    <div className="flex items-center gap-2" title={`Priority ${value}/100: researched score (relevance, cost/effort, link value) blended 70/30 with Ahrefs DR once fetched`}>
       <span className={`inline-flex h-7 w-9 items-center justify-center rounded-lg text-xs font-bold tabular-nums ring-1 ${t.bg} ${t.text} ${t.ring}`}>{value}</span>
       <span className="h-1.5 w-10 overflow-hidden rounded-full bg-gray-100">
         <span className={`block h-full rounded-full ${t.bar}`} style={{ width: `${value}%` }} />

@@ -14,6 +14,9 @@ export const sites = sqliteTable('sites', {
   dr: integer('dr'),
   drCheckedAt: text('dr_checked_at'),
   priority: integer('priority').notNull().default(50),
+  /** Researched score before the DR adjustment; priority = blend(priorityBase, dr) unless priorityManual. */
+  priorityBase: integer('priority_base'),
+  priorityManual: integer('priority_manual', { mode: 'boolean' }).notNull().default(false),
   linkType: text('link_type').notNull().default('unknown'),
   needsReview: integer('needs_review', { mode: 'boolean' }).notNull().default(false),
   format: text('format').notNull().default('plain'),
@@ -150,5 +153,7 @@ export const ADDED_COLUMNS: [string, string, string][] = [
   ['sites', 'priority', 'INTEGER NOT NULL DEFAULT 50'],
   ['projects', 'images', "TEXT NOT NULL DEFAULT '[]'"],
   ['sites', 'dr_checked_at', 'TEXT'],
-  ['sites', 'check_error', "TEXT NOT NULL DEFAULT ''"]
+  ['sites', 'check_error', "TEXT NOT NULL DEFAULT ''"],
+  ['sites', 'priority_base', 'INTEGER'],
+  ['sites', 'priority_manual', 'INTEGER NOT NULL DEFAULT 0']
 ]

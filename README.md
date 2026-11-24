@@ -54,6 +54,7 @@ A setup guide opens on first launch (reopen it any time from **Setup guide** in 
 4. **Create a project**, add 10-30 high-priority sites to the queue, generate posts, and start a session.
 
 Optional: add an Ahrefs API key in Settings to fill the DR column (uses the free DR endpoint, 0 API units).
+Once a site's DR is known, its priority becomes 70% the researched score and 30% DR; a priority you edit by hand is kept.
 
 ## Your data
 
@@ -107,7 +108,7 @@ The catalog is one file: [`catalog/sites.json`](catalog/sites.json). To add or f
   "submitUrl": "https://www.producthunt.com/posts/new",
   "type": "launch",              // directory | launch | ugc_blog | community | forum | qa
   "language": "en",              // en | vi
-  "priority": 92,                // 0-100: relevance + authority + cost/effort + link value
+  "priority": 92,                // 0-100: relevance, cost/effort, link value (blended 70/30 with DR in the app)
   "format": "plain",             // plain | markdown | html (what the site's editor accepts)
   "topics": ["startup", "saas"],
   "rules": "One or two sentences: free/paid, moderation, link policy.",
@@ -131,3 +132,11 @@ src/renderer/   React + Tailwind UI
 resources/      logo.svg (source of build/icon.png)
 docs/           Wriai AI API contract, screenshots
 ```
+
+## License
+
+[MIT](LICENSE) © 2026 Wriai. Site names and logos in the catalog belong to their owners.
+
+Domain Rating by [Ahrefs](https://ahrefs.com/). DR is fetched on each user's machine with their own Ahrefs key, under the
+[Ahrefs DR license](https://ahrefs.com/legal/domain-rating-license); the catalog file must not contain DR values
+(bulk redistribution is not allowed).

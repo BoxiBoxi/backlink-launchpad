@@ -21,6 +21,10 @@ export interface Site {
   drCheckedAt: string | null
   /** 0-100, higher = post here first */
   priority: number
+  /** Researched score before blending in DR. */
+  priorityBase?: number | null
+  /** True once the user set the priority by hand: DR no longer changes it. */
+  priorityManual?: boolean
   linkType: LinkType
   needsReview: boolean
   format: ContentFormat

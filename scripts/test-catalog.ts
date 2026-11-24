@@ -23,6 +23,8 @@ const seen = new Map<string, string>()
   if (!FORMATS.includes(s.format)) errors.push(`${at}: format must be one of ${FORMATS.join(', ')}`)
   if (!Array.isArray(s.topics)) errors.push(`${at}: topics must be an array`)
   if (s.priority !== undefined && !(Number.isInteger(s.priority) && s.priority >= 0 && s.priority <= 100)) errors.push(`${at}: priority must be an integer 0-100`)
+  // Ahrefs DR license: no bulk redistribution of DR values, so the catalog never ships them (fetched per user in the app).
+  if ('dr' in (s as object)) errors.push(`${at}: remove "dr" (DR is fetched in the app, it must not be published in the catalog)`)
   const key = seedKey(s.url)
   if (seen.has(key)) errors.push(`${at}: duplicate of ${seen.get(key)} (${key})`)
   seen.set(key, s.name)

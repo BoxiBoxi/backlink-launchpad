@@ -1,6 +1,7 @@
 // Data access: maps DB rows <-> shared types.
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { getDb } from './db'
+import { priorityWithDr } from '@core/ahrefs'
 import { contents, placedLinks, projects, settings, sites, tasks } from './db/schema'
 import type {
   Content,
@@ -38,16 +39,23 @@ export const siteRepo = {
     const values = { ...input, topics: JSON.stringify(input.topics ?? []) }
     delete (values as { id?: number }).id
     if (input.id) {
+      // A priority typed by the user is kept from then on (no DR re-scoring).
+      const prev = siteRepo.get(input.id)
+      if (prev && input.priority !== undefined && input.priority !== prev.priority) Object.assign(values, { priorityManual: true })
       getDb().update(sites).set(values).where(eq(sites.id, input.id)).run()
       return siteRepo.get(input.id)!
     }
-    const r = getDb().insert(sites).values(values).returning().get()
+    const r = getDb().insert(sites).values({ ...values, priorityBase: input.priority ?? 50 }).returning().get()
     return toSite(r)
   },
   delete: (id: number) => getDb().delete(sites).where(eq(sites.id, id)).run(),
   setAlive: (id: number, alive: Site['alive'], httpStatus: number | null, checkError = '') =>
     getDb().update(sites).set({ alive, httpStatus, checkError, lastCheckedAt: nowIso() }).where(eq(sites.id, id)).run(),
-  setDr: (id: number, dr: number) => getDb().update(sites).set({ dr, drCheckedAt: nowIso() }).where(eq(sites.id, id)).run(),
+  setDr: (id: number, dr: number) => {
+    const s = siteRepo.get(id)
+    const rescore = s && !s.priorityManual ? { priority: priorityWithDr(s.priorityBase ?? s.priority, dr) } : {}
+    getDb().update(sites).set({ dr, drCheckedAt: nowIso(), ...rescore }).where(eq(sites.id, id)).run()
+  },
   setLinkType: (id: number, linkType: Site['linkType']) =>
     getDb().update(sites).set({ linkType }).where(eq(sites.id, id)).run()
 }

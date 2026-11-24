@@ -3,6 +3,7 @@ import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3'
 import { join } from 'node:path'
 import * as schema from './schema'
 import { CATALOG_SEED, CATALOG_VERSION, seedKey } from '@core/catalogSeed'
+import { PRIORITY_SQL } from '@core/ahrefs'
 
 export type Db = BetterSQLite3Database<typeof schema>
 
@@ -30,13 +31,16 @@ export function initDb(dir: string): Db {
     const missing = CATALOG_SEED.filter((s) => !existing.has(seedKey(s.url)))
     if (missing.length) db.insert(schema.sites).values(missing.map((s) => ({ ...s, topics: JSON.stringify(s.topics) }))).run()
     // Give existing rows the researched priority, unless the user already changed it from the default.
-    const setPriority = raw.prepare('UPDATE sites SET priority = ? WHERE id = ? AND priority = 50')
+    const setPriority = raw.prepare('UPDATE sites SET priority = ?, priority_base = ? WHERE id = ? AND priority = 50 AND priority_manual = 0')
     for (const s of CATALOG_SEED) {
       const row = existing.get(seedKey(s.url))
-      if (row && s.priority !== 50) setPriority.run(s.priority, row.id)
+      if (row && s.priority !== 50) setPriority.run(s.priority, s.priority, row.id)
     }
     raw.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('catalogVersion', ?)").run(String(CATALOG_VERSION))
   }
+  // Priority = researched score blended with real Ahrefs DR (see priorityWithDr); scores the user set by hand are kept.
+  raw.exec('UPDATE sites SET priority_base = priority WHERE priority_base IS NULL')
+  raw.exec(`UPDATE sites SET priority = ${PRIORITY_SQL} WHERE dr IS NOT NULL AND priority_manual = 0`)
   return db
 }
 

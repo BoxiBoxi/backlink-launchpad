@@ -134,13 +134,13 @@ ${r.error}` : ''}`)
         <table className="w-full text-sm">
           <thead className="border-b border-gray-100 bg-gray-50/60 text-left text-xs uppercase tracking-wide text-gray-500">
             <tr>
-              <th className="px-4 py-3 font-medium" title="Our score 0-100 (relevance + authority + cost/effort + link value). Not DA/DR.">
+              <th className="px-4 py-3 font-medium" title="Our score 0-100: researched relevance, cost/effort and link value, blended 70/30 with Ahrefs DR once fetched. A score you edit by hand is kept.">
                 Priority
               </th>
               <th className="px-3 py-3 font-medium">Site</th>
               <th className="px-3 py-3 font-medium">Type</th>
               <th className="px-3 py-3 font-medium">Lang</th>
-              <th className="px-3 py-3 font-medium" title="Domain Rating, entered manually">DR</th>
+              <th className="px-3 py-3 font-medium" title="Domain Rating by Ahrefs (Fetch DR), or entered manually">DR</th>
               <th className="px-3 py-3 font-medium">Link</th>
               <th className="px-3 py-3 font-medium">Alive</th>
               <th className="px-3 py-3" />
@@ -175,6 +175,15 @@ ${r.error}` : ''}`)
           </tbody>
         </table>
       </Card>
+      {(sites.data ?? []).some((s) => s.dr !== null) && (
+        // Required by the Ahrefs Domain Rating license: attribution next to displayed DR values.
+        <p className="-mt-2 text-right text-xs text-gray-400">
+          Domain Rating by{' '}
+          <button type="button" className="font-medium text-gray-600 underline underline-offset-2 hover:text-gray-900" onClick={() => invoke('shell:openExternal', 'https://ahrefs.com/')}>
+            Ahrefs
+          </button>
+        </p>
+      )}
 
       <Modal
         open={!!editing}

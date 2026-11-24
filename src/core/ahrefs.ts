@@ -46,3 +46,13 @@ export async function fetchDomainRating(apiKey: string, domain: string, timeoutM
     clearTimeout(timer)
   }
 }
+
+/**
+ * Catalog priority once the real DR is known: 70% the researched score (relevance, cost/effort, link value and an
+ * authority estimate), 30% Ahrefs DR. Keep PRIORITY_SQL in sync (used to re-score existing rows on startup).
+ */
+export const PRIORITY_DR_WEIGHT = 0.3
+export function priorityWithDr(base: number, dr: number): number {
+  return Math.max(0, Math.min(100, Math.round((1 - PRIORITY_DR_WEIGHT) * base + PRIORITY_DR_WEIGHT * dr)))
+}
+export const PRIORITY_SQL = `MAX(0, MIN(100, CAST(ROUND(${1 - PRIORITY_DR_WEIGHT} * priority_base + ${PRIORITY_DR_WEIGHT} * dr) AS INTEGER)))`
