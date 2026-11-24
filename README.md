@@ -6,7 +6,7 @@
 <p align="center"><b>by <a href="https://wriai.com">Wriai</a></b> · plan, write and track launch posts and backlinks on 400+ directories and communities</p>
 
 <p align="center">
-  <img src="docs/screenshots/catalog.png" width="860" alt="Site catalog with priority, DR and favicons" />
+  <img src="docs/screenshots/hero.png" width="900" alt="Backlink Launchpad: dashboard, link monitor and site catalog" />
 </p>
 
 Backlink Launchpad is a free desktop app for founders and marketers who promote a product by listing it on directories,
@@ -22,6 +22,14 @@ everything, and you review and click submit yourself.
 | **AI writing** | On the Publish page, one click writes a unique, value-first post per site, in that site's language, length and format (HTML, Markdown or plain text). WYSIWYG editor, preview, Regenerate with your own instructions, and PDF export (for Yumpu, Issuu, Scribd, SlideShare). |
 | **Publish** | Opens each submit page in a separate browser profile, fills title and body, attaches logo and screenshots. **Start session** walks the queue by priority and saves the live post URL automatically when you publish (with Undo). |
 | **Link monitor** | Re-checks every placed link: page live, link present, `rel` (dofollow, nofollow, ugc, sponsored), anchor text. |
+
+## Screenshots
+
+| | |
+| --- | --- |
+| <img src="docs/screenshots/dashboard.png" alt="Dashboard" /> | <img src="docs/screenshots/projects.png" alt="Projects" /> |
+| <img src="docs/screenshots/link-monitor.png" alt="Link monitor" /> | <img src="docs/screenshots/catalog.png" alt="Site catalog" /> |
+| <img src="docs/screenshots/publish.png" alt="Publish" /> | |
 
 ## Responsible use
 

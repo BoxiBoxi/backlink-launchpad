@@ -97,16 +97,18 @@ export const projectRepo = {
   },
   delete: (id: number) => getDb().delete(projects).where(eq(projects.id, id)).run(),
   stats: (): ProjectStats[] => {
+    // Qualified outer column on purpose: an interpolated ${projects.id} renders as a bare "id", which SQLite
+    // resolves to the subquery's own table, so every count came out as 0 or 1.
     const db = getDb()
     return db
       .select({
         projectId: projects.id,
-        placed: sql<number>`(SELECT COUNT(*) FROM placed_links l WHERE l.project_id = ${projects.id})`,
-        live: sql<number>`(SELECT COUNT(*) FROM placed_links l WHERE l.project_id = ${projects.id} AND l.page_live = 1 AND l.link_found = 1)`,
-        dofollow: sql<number>`(SELECT COUNT(*) FROM placed_links l WHERE l.project_id = ${projects.id} AND l.page_live = 1 AND l.link_found = 1 AND l.rel = 'dofollow')`,
-        pendingTasks: sql<number>`(SELECT COUNT(*) FROM tasks t WHERE t.project_id = ${projects.id} AND t.status IN ('queued','opened'))`,
-        postedTasks: sql<number>`(SELECT COUNT(*) FROM tasks t WHERE t.project_id = ${projects.id} AND t.status = 'posted')`,
-        drafts: sql<number>`(SELECT COUNT(*) FROM contents c WHERE c.project_id = ${projects.id})`
+        placed: sql<number>`(SELECT COUNT(*) FROM placed_links l WHERE l.project_id = "projects"."id")`,
+        live: sql<number>`(SELECT COUNT(*) FROM placed_links l WHERE l.project_id = "projects"."id" AND l.page_live = 1 AND l.link_found = 1)`,
+        dofollow: sql<number>`(SELECT COUNT(*) FROM placed_links l WHERE l.project_id = "projects"."id" AND l.page_live = 1 AND l.link_found = 1 AND l.rel = 'dofollow')`,
+        pendingTasks: sql<number>`(SELECT COUNT(*) FROM tasks t WHERE t.project_id = "projects"."id" AND t.status IN ('queued','opened'))`,
+        postedTasks: sql<number>`(SELECT COUNT(*) FROM tasks t WHERE t.project_id = "projects"."id" AND t.status = 'posted')`,
+        drafts: sql<number>`(SELECT COUNT(*) FROM contents c WHERE c.project_id = "projects"."id")`
       })
       .from(projects)
       .all()
