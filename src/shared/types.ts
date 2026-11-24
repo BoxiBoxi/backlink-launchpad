@@ -173,7 +173,7 @@ export interface DrScanResult {
 }
 
 export interface OpenResult {
-  filled: { title: boolean; body: boolean; files: number }
+  filled: { title: boolean; body: boolean; website: boolean; files: number }
   copiedToClipboard: boolean
   message: string
 }

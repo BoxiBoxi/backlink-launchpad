@@ -154,6 +154,46 @@ const BODY_SELECTORS = [
   'textarea'
 ]
 
+// Product / website URL fields on directory and launch forms ("Tool URL", "Website", "Product link").
+const WEBSITE_SELECTORS = [
+  'input[type="url"]',
+  'input[name*="url" i]:not([name*="image" i]):not([name*="logo" i]):not([name*="video" i])',
+  'input[id*="url" i]:not([id*="image" i]):not([id*="logo" i]):not([id*="video" i])',
+  'input[name*="website" i]',
+  'input[id*="website" i]',
+  'input[placeholder*="https://" i]',
+  'input[placeholder*="example.com" i]',
+  'input[placeholder*="website" i]',
+  'input[aria-label*="website" i]',
+  'input[aria-label*="url" i]'
+]
+
+/** Fill the first empty, visible URL-like text input with the project's link. */
+async function fillWebsite(frames: Frame[], value: string): Promise<boolean> {
+  for (const frame of frames) {
+    for (const sel of WEBSITE_SELECTORS) {
+      const loc = frame.locator(sel)
+      const n = Math.min(await loc.count().catch(() => 0), 5)
+      for (let i = 0; i < n; i++) {
+        const el = loc.nth(i)
+        try {
+          if (!(await el.isVisible()) || !(await el.isEditable())) continue
+          const ok = await el.evaluate((node) => {
+            const e = node as HTMLInputElement
+            return !e.value && !['email', 'search', 'password', 'hidden', 'file', 'checkbox', 'radio'].includes(e.type)
+          })
+          if (!ok) continue
+          await el.fill(value)
+          return true
+        } catch {
+          /* try next candidate */
+        }
+      }
+    }
+  }
+  return false
+}
+
 async function tryFill(frames: Frame[], selectors: string[], value: string, page: Page, skip?: string): Promise<string | null> {
   for (const frame of frames) {
     for (const sel of selectors) {
@@ -198,11 +238,13 @@ export interface OpenForPostingInput {
   url: string
   title: string
   body: string
+  /** The product URL to put into "Website / Tool URL" fields. */
+  website: string
   logo: string
   images: string[]
 }
 
-export async function openForPosting(input: OpenForPostingInput): Promise<{ title: boolean; body: boolean; files: number; page: Page }> {
+export async function openForPosting(input: OpenForPostingInput): Promise<{ title: boolean; body: boolean; website: boolean; files: number; page: Page }> {
   const ctx = await ensurePostingContext(input.bravePath, input.profileDir)
   const blank = ctx.pages().find((p) => p.url() === 'about:blank')
   const page = blank ?? (await ctx.newPage())
@@ -214,9 +256,10 @@ export async function openForPosting(input: OpenForPostingInput): Promise<{ titl
   let titleMark: string | null = null
   if (input.title) titleMark = await tryFill(frames, TITLE_SELECTORS, input.title, page)
   const bodyMark = input.body ? await tryFill(frames, BODY_SELECTORS, input.body, page, titleMark ?? undefined) : null
+  const website = input.website ? await fillWebsite(frames, input.website) : false
   const files = await attachImages(frames, input.logo, input.images)
   // Leave the page as is: the user reviews, signs in / solves CAPTCHA if needed, and submits.
-  return { title: titleMark !== null, body: bodyMark !== null, files, page }
+  return { title: titleMark !== null, body: bodyMark !== null, website, files, page }
 }
 
 /**

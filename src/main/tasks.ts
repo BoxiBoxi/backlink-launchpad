@@ -40,6 +40,7 @@ export async function openTask(taskId: number): Promise<OpenResult & { page: Pag
     bravePath: requireBrave(),
     profileDir: profileDir(),
     url: site.submitUrl || site.url,
+    website: content?.linkUrl || project?.targets?.[0]?.url || (project?.domain ? `https://${project.domain}` : ''),
     // No AI content yet: fall back to the brand profile (fits directory/listing forms).
     title: content?.title ?? project?.name ?? '',
     body: content
@@ -52,6 +53,7 @@ export async function openTask(taskId: number): Promise<OpenResult & { page: Pag
   const parts = [
     filled.title ? 'title filled' : 'title not detected',
     filled.body ? 'body filled' : 'body not detected',
+    ...(filled.website ? ['website URL filled'] : []),
     ...(filled.files ? [`${filled.files} image field(s) attached`] : []),
     copied ? 'body copied to clipboard' : 'no AI content yet, used the project name and short description'
   ]
