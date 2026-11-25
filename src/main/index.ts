@@ -10,7 +10,7 @@ import { startLinkScheduler } from './checker'
 import { closePostingBrowser } from './browser'
 import { handleFavicon } from './favicon'
 
-// Pin the data folder (SQLite DB, Brave profile with cookies/logins, media) so it never depends on how Electron
+// Pin the data folder (SQLite DB, browser profiles with cookies/logins, media) so it never depends on how Electron
 // was launched:
 //   - BB_USER_DATA=C:\some\dir    explicit override (tests)
 //   - dev (pnpm dev)              <project>\data  (gitignored: contains login cookies)

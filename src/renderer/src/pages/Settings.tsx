@@ -46,7 +46,7 @@ export default function SettingsPage(_: PageProps) {
             <Field label="Browser path" hint="Leave empty to auto-detect (Brave first, then Chrome, then Edge).">
               <Input value={form.bravePath} onChange={(e) => set('bravePath', e.target.value)} placeholder="C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe" />
             </Field>
-            <Field label="Dedicated profile folder" hint="Separate from your main Brave profile. Sign in to each site once here; sessions persist.">
+            <Field label="Dedicated profile folder" hint={`Separate from your main browser profile, one folder per browser${s?.browserName && s.browserName !== "none" ? ` (now: ${s.browserName})` : ""}. Sign in to each site once here; sessions persist. Switching browser means signing in again.`}>
               <Input value={s?.profileDir ?? ''} readOnly className="bg-gray-50 text-gray-500" />
             </Field>
           </div>

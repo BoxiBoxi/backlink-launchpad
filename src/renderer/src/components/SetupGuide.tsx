@@ -86,7 +86,7 @@ export default function SetupGuide({ onClose, onCreateProject }: { onClose: () =
             <div className="grid gap-5">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">Browser</h2>
-                <p className="text-sm text-gray-500">The app drives a separate browser profile to open submit pages. Brave is recommended; Chrome and Edge also work.</p>
+                <p className="text-sm text-gray-500">The app drives a separate browser profile to open submit pages. Brave, Chrome or Microsoft Edge all work; the first one found is used.</p>
               </div>
               {status.browserPath ? (
                 <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
@@ -100,7 +100,7 @@ export default function SetupGuide({ onClose, onCreateProject }: { onClose: () =
                 <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-900">
                   <CircleAlert className="mt-0.5 size-4 shrink-0" />
                   <div>
-                    <b>No browser found.</b> Install Brave, then click Check again, or enter the path of an installed Chromium browser.
+                    <b>No browser found.</b> Install Brave, Chrome or Microsoft Edge, then click Check again, or enter the path of an installed Chromium browser.
                     <div className="mt-2">
                       <Button size="sm" icon={<ExternalLink className="size-3.5" />} onClick={() => invoke('shell:openExternal', BROWSER_DOWNLOAD)}>Download Brave</Button>
                     </div>
@@ -109,7 +109,7 @@ export default function SetupGuide({ onClose, onCreateProject }: { onClose: () =
               )}
               <Field label="Browser path (optional)" hint="Leave empty to auto-detect.">
                 <div className="flex gap-2">
-                  <Input value={browserPath} onChange={(e) => setBrowserPath(e.target.value)} placeholder={status.platform === 'win32' ? 'C:\\...\\brave.exe' : '/Applications/Brave Browser.app/...'} />
+                  <Input value={browserPath} onChange={(e) => setBrowserPath(e.target.value)} placeholder={status.platform === 'win32' ? 'C:\\...\\msedge.exe' : '/Applications/Google Chrome.app/...'} />
                   <Button
                     icon={<RefreshCw className="size-4" />}
                     loading={busy === 'browser'}

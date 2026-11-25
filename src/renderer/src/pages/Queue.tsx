@@ -16,6 +16,8 @@ export default function Queue({ projectId, go }: PageProps) {
   const sites = useQuery('sites:list')
   const tasks = useQuery('tasks:list', projectId)
   const contents = useQuery('content:list', projectId)
+  const settings = useQuery('settings:get')
+  const browser = settings.data?.browserName && settings.data.browserName !== 'none' ? settings.data.browserName : 'the browser'
   const project = projects.data?.find((p) => p.id === projectId)
   const { busy, run } = useAction()
   const toast = useToast()
@@ -110,13 +112,13 @@ export default function Queue({ projectId, go }: PageProps) {
     <>
       <PageHeader
         title="Publish"
-        subtitle="Open a task: Brave goes to the submit page and pre-fills what it can. You review, sign in, solve CAPTCHAs and submit yourself."
+        subtitle={`Open a task: ${browser} goes to the submit page and pre-fills what it can. You review, sign in, solve CAPTCHAs and submit yourself.`}
         actions={
           <>
-            <Button icon={<LogIn className="size-4" />} onClick={() => run('login', () => invoke('browser:openProfile', null), 'Brave opened on the BacklinkBuilder profile. Sign in to sites, then close that window before opening tasks.')}>
+            <Button icon={<LogIn className="size-4" />} onClick={() => run('login', () => invoke('browser:openProfile', null), `${browser} opened on the BacklinkBuilder profile. Sign in to sites; opening a task closes this window automatically (your logins are kept).`)}>
               Login window
             </Button>
-            <Button icon={<X className="size-4" />} onClick={() => run('close', () => invoke('browser:close'), 'Automated Brave closed')}>Close Brave</Button>
+            <Button icon={<X className="size-4" />} onClick={() => run('close', () => invoke('browser:close'), 'Browser closed')}>Close browser</Button>
             <Button icon={<Plus className="size-4" />} onClick={() => { setPicked([]); setAdding(true) }}>Add sites</Button>
             <Menu
               label="Clear"
@@ -205,7 +207,7 @@ export default function Queue({ projectId, go }: PageProps) {
 
       <Card className="overflow-x-auto">
         {tasks.data?.length === 0 ? (
-          <Empty icon={<ListChecks className="size-6" />} title="Queue is empty" text="Add target sites, generate content for each, then open them one by one in Brave." />
+          <Empty icon={<ListChecks className="size-6" />} title="Queue is empty" text={`Add target sites, generate content for each, then open them one by one in ${browser}.`} />
         ) : (
           <table className="w-full text-sm">
             <thead className="border-b border-gray-100 bg-gray-50/60 text-left text-xs uppercase tracking-wide text-gray-500">
@@ -343,7 +345,7 @@ export default function Queue({ projectId, go }: PageProps) {
           </>
         }
       >
-        <Field label="Live post URL" hint="Paste the URL of the published post or listing, or read it from the active Brave tab.">
+        <Field label="Live post URL" hint="Paste the URL of the published post or listing, or read it from the active browser tab.">
           <div className="flex gap-2">
             <Input value={postUrl} onChange={(e) => setPostUrl(e.target.value)} placeholder="https://" />
             <Button
@@ -351,10 +353,10 @@ export default function Queue({ projectId, go }: PageProps) {
               onClick={async () => {
                 const url = await run('read', () => invoke('tasks:readCurrentUrl'))
                 if (url) setPostUrl(url)
-                else if (url === null) toast('error', 'No automated Brave tab is open')
+                else if (url === null) toast('error', 'No automated browser tab is open')
               }}
             >
-              Read from Brave
+              Read from browser
             </Button>
           </div>
         </Field>

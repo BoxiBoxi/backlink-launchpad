@@ -1,11 +1,11 @@
 // Runtime configuration: .env (same variable names as Wriai) + overrides saved in Settings.
 import { app } from 'electron'
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import dotenv from 'dotenv'
 import { gatewaysFromEnv, parseModelList, wriaiGateway, WRIAI_API_BASE, type AiGateway } from '@core/ai'
 import { settingsRepo } from './repo'
-import { detectBrave } from './browser'
+import { browserKind, browserName, detectBrave } from './browser'
 import type { AiProvider, Settings, SettingsInput } from '@shared/types'
 
 /** .env lookup order: userData, next to the exe (packaged), project root (dev). First file wins per variable. */
@@ -26,7 +26,34 @@ export function loadEnv(): string[] {
   return loaded
 }
 
-export const profileDir = () => join(app.getPath('userData'), 'brave-profile')
+/**
+ * Dedicated profile folder for the current browser. Each browser gets its own folder: Chrome, Edge and Brave
+ * encrypt cookies with a browser-specific key, so a profile written by one is logged out in another, and a
+ * profile from a newer browser version can break an older one.
+ *
+ * Older versions used a single "brave-profile" folder for whatever browser was installed. On first run it is
+ * claimed by the current browser (recorded in a marker file), so existing users keep their logins.
+ */
+export function profileDir(): string {
+  const userData = app.getPath('userData')
+  const path = getBravePath()
+  const kind = browserKind(path)
+  const legacy = join(userData, 'brave-profile')
+  if (existsSync(legacy)) {
+    const marker = join(legacy, '.backlink-browser')
+    let owner = existsSync(marker) ? readFileSync(marker, 'utf8').trim() : ''
+    if (!owner && path) {
+      owner = kind
+      try {
+        writeFileSync(marker, kind)
+      } catch {
+        /* read-only: still use it this run */
+      }
+    }
+    if (owner === kind) return legacy
+  }
+  return join(userData, `profile-${kind}`)
+}
 
 export function getBravePath(): string | null {
   const saved = settingsRepo.get('bravePath')
@@ -79,6 +106,7 @@ export function getSettings(): Settings {
     aiProvider: aiProvider(),
     wriaiKeySet: !!wriaiKey(),
     bravePath: getBravePath() || '',
+    browserName: browserName(getBravePath()),
     profileDir: profileDir(),
     linkCheckIntervalHours: Number(settingsRepo.get('linkCheckIntervalHours') || 24),
     // Nothing configured yet: show the standard OpenAI endpoint and a default model, so "paste your key" is enough.

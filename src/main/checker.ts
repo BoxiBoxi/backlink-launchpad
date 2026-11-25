@@ -1,4 +1,4 @@
-// Site-alive checks and placed-link checks (headless Brave, with plain fetch fallback).
+// Site-alive checks and placed-link checks (headless browser, with plain fetch fallback).
 import type { Browser } from 'playwright-core'
 import { analyzeAnchors, extractAnchorsFromHtml, hasMetaNofollow, type PageAnchor } from '@core/linkAnalysis'
 import type { Alive, PlacedLink, SiteCheckResult } from '@shared/types'

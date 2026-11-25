@@ -1,11 +1,12 @@
-// Brave automation via Playwright.
-// - Posting uses a persistent context on a DEDICATED profile (<userData>/brave-profile), never the user's main profile.
+// Browser automation via Playwright (Brave, Chrome or Edge, whichever is installed).
+// - Posting uses a persistent context on a DEDICATED profile per browser (<userData>/profile-<browser>),
+//   never the user's main profile.
 // - The app only navigates and pre-fills fields. It never clicks submit, never solves CAPTCHAs, never creates accounts.
-// - Checks (site alive, link monitor) use a separate headless Brave instance without the profile.
+// - Checks (site alive, link monitor) use a separate headless instance without the profile.
 import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
-import { spawn } from 'node:child_process'
+import { execFile, spawn } from 'node:child_process'
 import { chromium, type Browser, type BrowserContext, type Frame, type Page } from 'playwright-core'
 
 /** Candidate browser executables per OS: Brave first (recommended), then Chrome and Edge as fallbacks. */
@@ -46,36 +47,145 @@ export function detectBrave(): string | null {
   return browserCandidates().find((p) => existsSync(p)) ?? null
 }
 
+export type BrowserKind = 'brave' | 'edge' | 'chrome' | 'chromium'
+
+export function browserKind(path: string | null): BrowserKind {
+  const p = (path ?? '').toLowerCase()
+  return p.includes('brave') ? 'brave' : p.includes('edge') ? 'edge' : p.includes('chrome') ? 'chrome' : 'chromium'
+}
+
 export function browserName(path: string | null): string {
   if (!path) return 'none'
-  const p = path.toLowerCase()
-  return p.includes('brave') ? 'Brave' : p.includes('edge') ? 'Microsoft Edge' : p.includes('chrom') ? 'Chrome' : 'Chromium'
+  return { brave: 'Brave', edge: 'Microsoft Edge', chrome: 'Chrome', chromium: 'Chromium' }[browserKind(path)]
 }
 
 let postingCtx: BrowserContext | null = null
-let manualProcessRunning = false
+/** Profile folder of the non-automated login window we started (see openProfileForLogin). */
+let loginWindowProfile: string | null = null
 
 export function isPostingBrowserRunning(): boolean {
-  return postingCtx !== null || manualProcessRunning
+  return postingCtx !== null || loginWindowProfile !== null
 }
 
-async function ensurePostingContext(bravePath: string, profileDir: string): Promise<BrowserContext> {
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms))
+
+function run(cmd: string, args: string[], env?: Record<string, string>): Promise<{ code: number; stdout: string }> {
+  return new Promise((resolve) => {
+    execFile(cmd, args, { windowsHide: true, env: env ? { ...process.env, ...env } : process.env, maxBuffer: 16 * 1024 * 1024 }, (err, stdout) => {
+      const code = err ? (typeof (err as { code?: unknown }).code === 'number' ? (err as { code: number }).code : 1) : 0
+      resolve({ code, stdout: String(stdout ?? '') })
+    })
+  })
+}
+
+function isAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (err) {
+    return (err as NodeJS.ErrnoException).code === 'EPERM'
+  }
+}
+
+/**
+ * PIDs of the main browser processes using this profile folder. Matched on the command line, because the
+ * process we spawn is not always the one that stays: Edge relaunches itself, and Chrome/Edge may keep running
+ * in the background after the last window is closed.
+ */
+async function findProfileBrowsers(profileDir: string): Promise<number[]> {
+  const needle = profileDir.toLowerCase()
+  if (process.platform === 'win32') {
+    const script =
+      "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine.ToLower().Contains($env:BB_PROFILE) -and -not $_.CommandLine.Contains('--type=') } | ForEach-Object { $_.ProcessId }"
+    const { stdout } = await run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', script], { BB_PROFILE: needle })
+    return stdout
+      .split(/\s+/)
+      .map(Number)
+      .filter((n) => Number.isInteger(n) && n > 0 && n !== process.pid)
+  }
+  const { stdout } = await run('ps', ['-ax', '-o', 'pid=,command='])
+  return stdout
+    .split('\n')
+    .map((line) => line.trim().match(/^(\d+)\s+(.*)$/))
+    .filter((m): m is RegExpMatchArray => !!m && m[2].toLowerCase().includes(needle) && !m[2].includes('--type='))
+    .map((m) => Number(m[1]))
+    .filter((n) => n !== process.pid)
+}
+
+async function waitAllExit(pids: number[], ms: number): Promise<boolean> {
+  const until = Date.now() + ms
+  while (Date.now() < until) {
+    if (!pids.some(isAlive)) return true
+    await sleep(300)
+  }
+  return !pids.some(isAlive)
+}
+
+/**
+ * Close every browser window/process on this profile. Asks politely first (WM_CLOSE on Windows, SIGTERM
+ * elsewhere) so the browser writes cookies to disk, and only force-kills what is still running after that.
+ */
+async function closeProfileBrowsers(profileDir: string): Promise<void> {
+  const pids = await findProfileBrowsers(profileDir)
+  if (!pids.length) return
+  let politeFailed = false
+  for (const pid of pids) {
+    if (process.platform === 'win32') {
+      // Without /F, taskkill sends WM_CLOSE. It fails right away when the process has no window (background mode).
+      if ((await run('taskkill', ['/PID', String(pid)])).code !== 0) politeFailed = true
+    } else {
+      try {
+        process.kill(pid, 'SIGTERM')
+      } catch {
+        /* already gone */
+      }
+    }
+  }
+  if (await waitAllExit(pids, politeFailed ? 1500 : 6000)) return
+  for (const pid of pids.filter(isAlive)) {
+    if (process.platform === 'win32') await run('taskkill', ['/PID', String(pid), '/T', '/F'])
+    else {
+      try {
+        process.kill(pid, 'SIGKILL')
+      } catch {
+        /* already gone */
+      }
+    }
+  }
+  await waitAllExit(pids, 3000)
+}
+
+const isProfileLocked = (msg: string) => /user data directory is already in use|ProcessSingleton|exitCode=21/i.test(msg)
+
+async function ensurePostingContext(browserPath: string, profileDir: string): Promise<BrowserContext> {
   if (postingCtx) return postingCtx
-  if (manualProcessRunning) {
-    throw new Error('The Brave login window is still open. Close it first, then click Open again (the profile can only be used by one window).')
+  // The profile can only be used by one browser process: close the login window instead of refusing.
+  if (loginWindowProfile) {
+    await closeProfileBrowsers(loginWindowProfile)
+    loginWindowProfile = null
   }
   mkdirSync(profileDir, { recursive: true })
-  try {
-    postingCtx = await chromium.launchPersistentContext(profileDir, {
-      executablePath: bravePath,
+  const launch = () =>
+    chromium.launchPersistentContext(profileDir, {
+      executablePath: browserPath,
       headless: false,
       viewport: null,
       args: ['--start-maximized', '--no-first-run', '--no-default-browser-check']
     })
+  try {
+    try {
+      postingCtx = await launch()
+    } catch (err) {
+      if (!isProfileLocked(err instanceof Error ? err.message : String(err))) throw err
+      // Still held by a leftover window (e.g. from before the app restarted, or running in the background).
+      await closeProfileBrowsers(profileDir)
+      await sleep(1000)
+      postingCtx = await launch()
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
-    if (/user data directory is already in use|ProcessSingleton|exitCode=21/i.test(msg)) {
-      throw new Error('The BacklinkBuilder Brave profile is already open in another window. Close that Brave window and try again.')
+    if (isProfileLocked(msg)) {
+      throw new Error('The BacklinkBuilder browser profile is already open in another window. Close that browser window and try again.')
     }
     throw err
   }
@@ -86,10 +196,11 @@ async function ensurePostingContext(bravePath: string, profileDir: string): Prom
 }
 
 /**
- * Open Brave on the dedicated profile WITHOUT automation, so the user can sign in to sites normally
- * (some providers refuse logins in automated browsers). Sessions persist in the profile.
+ * Open the browser on the dedicated profile WITHOUT automation, so the user can sign in to sites normally
+ * (some providers refuse logins in automated browsers). Sessions persist in the profile. If the window is
+ * already open, the browser hands the URL to it instead of starting a second instance.
  */
-export async function openProfileForLogin(bravePath: string, profileDir: string, url: string | null): Promise<void> {
+export async function openProfileForLogin(browserPath: string, profileDir: string, url: string | null): Promise<void> {
   if (postingCtx) {
     const page = await postingCtx.newPage()
     if (url) await page.goto(url).catch(() => undefined)
@@ -97,23 +208,21 @@ export async function openProfileForLogin(bravePath: string, profileDir: string,
     return
   }
   mkdirSync(profileDir, { recursive: true })
-  const child = spawn(bravePath, [`--user-data-dir=${profileDir}`, '--no-first-run', '--no-default-browser-check', ...(url ? [url] : [])], {
+  const child = spawn(browserPath, [`--user-data-dir=${profileDir}`, '--no-first-run', '--no-default-browser-check', ...(url ? [url] : [])], {
     detached: false,
     stdio: 'ignore'
   })
-  manualProcessRunning = true
-  child.on('exit', () => {
-    manualProcessRunning = false
-  })
-  child.on('error', () => {
-    manualProcessRunning = false
-  })
+  child.on('error', () => undefined)
+  loginWindowProfile = profileDir
 }
 
+/** Close both the automated browser and the login window, if open. */
 export async function closePostingBrowser(): Promise<void> {
   const ctx = postingCtx
   postingCtx = null
-  await ctx?.close().catch(() => undefined)
+  const loginProfile = loginWindowProfile
+  loginWindowProfile = null
+  await Promise.all([ctx?.close().catch(() => undefined), loginProfile ? closeProfileBrowsers(loginProfile) : undefined])
 }
 
 const TITLE_SELECTORS = [
@@ -233,7 +342,7 @@ async function tryFill(frames: Frame[], selectors: string[], value: string, page
 }
 
 export interface OpenForPostingInput {
-  bravePath: string
+  browserPath: string
   profileDir: string
   url: string
   title: string
@@ -245,7 +354,7 @@ export interface OpenForPostingInput {
 }
 
 export async function openForPosting(input: OpenForPostingInput): Promise<{ title: boolean; body: boolean; website: boolean; files: number; page: Page }> {
-  const ctx = await ensurePostingContext(input.bravePath, input.profileDir)
+  const ctx = await ensurePostingContext(input.browserPath, input.profileDir)
   const blank = ctx.pages().find((p) => p.url() === 'about:blank')
   const page = blank ?? (await ctx.newPage())
   await page.goto(input.url, { waitUntil: 'domcontentloaded', timeout: 45000 })
@@ -314,11 +423,11 @@ export function currentPostingUrl(): string | null {
 }
 
 // ---------- headless (checks) ----------
-export async function withHeadless<T>(bravePath: string | null, fn: (browser: Browser | null) => Promise<T>): Promise<T> {
-  if (!bravePath) return fn(null)
+export async function withHeadless<T>(browserPath: string | null, fn: (browser: Browser | null) => Promise<T>): Promise<T> {
+  if (!browserPath) return fn(null)
   let browser: Browser | null = null
   try {
-    browser = await chromium.launch({ executablePath: bravePath, headless: true })
+    browser = await chromium.launch({ executablePath: browserPath, headless: true })
   } catch {
     browser = null // fall back to plain HTTP fetch
   }

@@ -132,6 +132,8 @@ export interface Settings {
   aiProvider: AiProvider
   wriaiKeySet: boolean
   bravePath: string
+  /** Display name of the browser in use ('Brave', 'Chrome', 'Microsoft Edge', ...), or 'none' */
+  browserName: string
   profileDir: string
   linkCheckIntervalHours: number
   aiEndpoint: string

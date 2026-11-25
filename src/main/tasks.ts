@@ -4,7 +4,7 @@ import type { Page } from 'playwright-core'
 import type { OpenResult, PlacedLink, Task } from '@shared/types'
 import { contentRepo, linkRepo, projectRepo, siteRepo, taskRepo } from './repo'
 import { getBravePath, profileDir } from './config'
-import { openForPosting } from './browser'
+import { browserName, openForPosting } from './browser'
 
 export function requireBrave(): string {
   const p = getBravePath()
@@ -19,7 +19,7 @@ function stripMarkdown(md: string): string {
     .replace(/\*\*([^*]+)\*\*/g, '$1')
 }
 
-/** Open the task's submit page in Brave and pre-fill it. Never submits. */
+/** Open the task's submit page in the browser and pre-fill it. Never submits. */
 export async function openTask(taskId: number): Promise<OpenResult & { page: Page }> {
   const task = taskRepo.get(taskId)
   if (!task) throw new Error('Task not found')
@@ -37,7 +37,7 @@ export async function openTask(taskId: number): Promise<OpenResult & { page: Pag
   const { page, ...filled } = await openForPosting({
     logo: project?.logoPath || '',
     images: project?.images ?? [],
-    bravePath: requireBrave(),
+    browserPath: requireBrave(),
     profileDir: profileDir(),
     url: site.submitUrl || site.url,
     website: content?.linkUrl || project?.targets?.[0]?.url || (project?.domain ? `https://${project.domain}` : ''),
@@ -61,7 +61,7 @@ export async function openTask(taskId: number): Promise<OpenResult & { page: Pag
     page,
     filled,
     copiedToClipboard: copied,
-    message: `${parts.join(', ')}. Review in Brave, sign in or solve any CAPTCHA yourself, then submit manually.`
+    message: `${parts.join(', ')}. Review in ${browserName(getBravePath())}, sign in or solve any CAPTCHA yourself, then submit manually.`
   }
 }
 

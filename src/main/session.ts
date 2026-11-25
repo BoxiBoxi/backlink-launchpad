@@ -1,5 +1,5 @@
 // Posting session: walks the project's open tasks in priority order.
-// For each task it opens the submit page (pre-filled), then watches the Brave tabs. When the user has submitted and
+// For each task it opens the submit page (pre-filled), then watches the browser tabs. When the user has submitted and
 // the browser lands on the live post URL, the session saves it and opens the next task.
 // The user still reviews, signs in, solves CAPTCHAs and clicks submit: the session never submits anything.
 import type { SessionStatus } from '@shared/types'
@@ -108,7 +108,7 @@ async function check(): Promise<void> {
   s.checking = true
   try {
     const ctx = postingContext()
-    if (!ctx) return finish('Brave was closed. Session stopped.')
+    if (!ctx) return finish('The browser was closed. Session stopped.')
     const task = taskRepo.get(s.currentTaskId)
     const site = task ? siteRepo.get(task.siteId) : undefined
     if (!task || !site || task.status === 'posted') return // manual "Posted" is handled by onTaskPostedManually
