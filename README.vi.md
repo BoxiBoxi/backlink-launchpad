@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">Backlink Launchpad</h1>
-<p align="center"><b>by <a href="https://wriai.com">Wriai</a></b> · lên kế hoạch, viết bài và theo dõi backlink trên hơn 400 directory, launch site và cộng đồng</p>
+<p align="center"><b>by <a href="https://wriai.com">Wriai</a></b> · lên kế hoạch, viết bài và theo dõi backlink trên hơn 500 directory, launch site và cộng đồng</p>
 
 <p align="center">
   <a href="https://github.com/BoxiBoxi/backlink-launchpad/releases/latest"><img src="https://img.shields.io/github/v/release/BoxiBoxi/backlink-launchpad?color=10B981&label=release" alt="Latest release" /></a>
@@ -27,6 +27,11 @@
 </p>
 
 <p align="center"><a href="README.md">English</a> · <b>Tiếng Việt</b></p>
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=zBqhcdakRWQ"><img src="https://img.youtube.com/vi/zBqhcdakRWQ/maxresdefault.jpg" width="720" alt="Xem video hướng dẫn Backlink Launchpad trên YouTube" /></a>
+  <br /><sub>▶ <a href="https://www.youtube.com/watch?v=zBqhcdakRWQ">Xem video hướng dẫn trên YouTube</a></sub>
+</p>
 
 <p align="center">
   <img src="docs/screenshots/hero.png" width="900" alt="Backlink Launchpad: dashboard, link monitor and site catalog" />

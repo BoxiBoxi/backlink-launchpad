@@ -29,6 +29,11 @@
 <p align="center"><b>English</b> · <a href="README.vi.md">Tiếng Việt</a></p>
 
 <p align="center">
+  <a href="https://www.youtube.com/watch?v=zBqhcdakRWQ"><img src="https://img.youtube.com/vi/zBqhcdakRWQ/maxresdefault.jpg" width="720" alt="Watch the Backlink Launchpad tutorial on YouTube" /></a>
+  <br /><sub>▶ <a href="https://www.youtube.com/watch?v=zBqhcdakRWQ">Watch the tutorial on YouTube</a></sub>
+</p>
+
+<p align="center">
   <img src="docs/screenshots/hero.png" width="900" alt="Backlink Launchpad: dashboard, link monitor and site catalog" />
 </p>
 
