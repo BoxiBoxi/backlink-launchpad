@@ -1,9 +1,9 @@
 {
   "name": "backlink-launchpad",
   "productName": "Backlink Launchpad",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "license": "MIT",
-  "description": "Backlink Launchpad by Wriai: plan, write and track launch posts and backlinks on 400+ directories and communities (human-in-the-loop).",
+  "description": "Backlink Launchpad by Wriai: plan, write and track launch posts and backlinks on 500+ directories and communities (human-in-the-loop).",
   "private": true,
   "main": "./out/main/index.js",
   "author": {
@@ -14,13 +14,13 @@
     "dev": "electron-vite dev",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "build:app": "electron-vite build",
-    "build": "electron-vite build && electron-builder --win --x64",
-    "build:dir": "electron-vite build && electron-builder --win --x64 --dir",
+    "build": "electron-vite build && electron-builder --win --x64 --publish never",
+    "build:dir": "electron-vite build && electron-builder --win --x64 --dir --publish never",
     "postinstall": "electron-builder install-app-deps",
     "test": "esbuild scripts/test-postDetect.ts --bundle --platform=node --outfile=out/test/postDetect.cjs --log-level=warning && node out/test/postDetect.cjs && esbuild scripts/test-catalog.ts --bundle --platform=node --alias:@shared=./src/shared --outfile=out/test/catalog.cjs --log-level=warning && node out/test/catalog.cjs",
-    "build:win": "electron-vite build && electron-builder --win --x64",
-    "build:mac": "electron-vite build && electron-builder --mac",
-    "build:linux": "electron-vite build && electron-builder --linux"
+    "build:win": "electron-vite build && electron-builder --win --x64 --publish never",
+    "build:mac": "electron-vite build && electron-builder --mac --publish never",
+    "build:linux": "electron-vite build && electron-builder --linux --publish never"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -58,6 +58,7 @@
     "better-sqlite3": "^13.2.0",
     "dotenv": "^18.0.10",
     "drizzle-orm": "^0.45.4",
+    "electron-updater": "^6.8.11",
     "playwright-core": "^1.65.1"
   },
   "homepage": "https://wriai.com"

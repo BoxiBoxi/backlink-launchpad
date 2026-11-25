@@ -108,6 +108,7 @@ export function getSettings(): Settings {
     bravePath: getBravePath() || '',
     browserName: browserName(getBravePath()),
     profileDir: profileDir(),
+    closeToTray: settingsRepo.get('closeToTray') !== '0',
     linkCheckIntervalHours: Number(settingsRepo.get('linkCheckIntervalHours') || 24),
     // Nothing configured yet: show the standard OpenAI endpoint and a default model, so "paste your key" is enough.
     aiEndpoint: gws[0]?.url || settingsRepo.get('aiEndpoint') || process.env.OPENAI_END_POINT || 'https://api.openai.com/v1',
@@ -122,6 +123,7 @@ export function saveSettings(input: SettingsInput): Settings {
     if (input.bravePath.trim()) settingsRepo.set('bravePath', input.bravePath.trim())
     else settingsRepo.delete('bravePath')
   }
+  if (input.closeToTray !== undefined) settingsRepo.set('closeToTray', input.closeToTray ? '1' : '0')
   if (input.linkCheckIntervalHours !== undefined) {
     settingsRepo.set('linkCheckIntervalHours', String(Math.max(1, Math.round(input.linkCheckIntervalHours))))
   }

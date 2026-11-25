@@ -11,8 +11,19 @@ files:
   - "!**/*.map"
 asarUnpack:
   - "**/*.node"
+# Tray icon (the window icon comes from the exe, but the tray needs an image file).
+extraResources:
+  - from: build/icon.png
+    to: icon.png
 npmRebuild: true
-publish: null
+# Update feed for electron-updater: the installed app checks the latest (non-draft) GitHub release for
+# latest.yml / latest-mac.yml / latest-linux.yml. Builds never upload (--publish never); the release workflow
+# attaches the installers and these files to a draft release, which goes live when you publish it.
+publish:
+  provider: github
+  owner: BoxiBoxi
+  repo: backlink-launchpad
+  releaseType: release
 
 win:
   target:
@@ -29,6 +40,9 @@ mac:
   category: public.app-category.productivity
   target:
     - target: dmg
+      arch: [arm64, x64]
+    # The zip is what produces latest-mac.yml, so the Mac app can see that a new version exists.
+    - target: zip
       arch: [arm64, x64]
   artifactName: Backlink-Launchpad-${version}-${arch}.${ext}
 

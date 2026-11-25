@@ -1,5 +1,6 @@
 # Builds installers for Windows, macOS and Linux and attaches them to a draft GitHub Release.
 # Trigger: push a tag like v0.2.0 (or run manually from the Actions tab).
+# Publishing the draft makes it the update feed: installed apps find latest*.yml there and update themselves.
 name: Release
 
 on:
@@ -45,7 +46,10 @@ jobs:
           path: |
             release/*.exe
             release/*.dmg
+            release/*.zip
             release/*.AppImage
+            release/*.blockmap
+            release/latest*.yml
           if-no-files-found: error
 
   release:

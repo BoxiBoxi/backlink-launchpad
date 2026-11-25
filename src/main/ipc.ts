@@ -6,6 +6,7 @@ import { contentRepo, linkRepo, projectRepo, settingsRepo, siteRepo, taskRepo } 
 import { aiGateways, aiProvider, aiTimeoutMs, getBravePath, getSettings, profileDir, saveSettings } from './config'
 import { browserName, closePostingBrowser, currentPostingUrl, isPostingBrowserRunning, openProfileForLogin } from './browser'
 import { markPosted, openTask, requireBrave, undoPosted } from './tasks'
+import { checkForUpdates, installUpdate, updateStatus } from './updater'
 import { nextInSession, onTaskPostedManually, sessionStatus, startSession, stopSession } from './session'
 import { exportContentPdf } from './pdf'
 import { scanDr } from './drScan'
@@ -157,6 +158,9 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
     }
   })
   handle('setup:complete', () => void settingsRepo.set('setupDone', '1'))
+  handle('update:status', () => updateStatus())
+  handle('update:check', () => checkForUpdates())
+  handle('update:install', () => installUpdate())
   handle('settings:get', () => getSettings())
   handle('settings:save', (input) => saveSettings(input))
   handle('ai:test', async () => {

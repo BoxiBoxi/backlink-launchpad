@@ -3,6 +3,7 @@ import { BookOpen, Compass, FolderKanban, LayoutDashboard, Link2, Send, Settings
 import { invoke, requestRefresh, ToastProvider, useQuery, useToast } from './lib'
 import { Dropdown } from './components/ui'
 import SetupGuide from './components/SetupGuide'
+import UpdateNotice from './components/UpdateNotice'
 import { APP_BY, APP_NAME, LogoMark } from './components/Logo'
 import Dashboard from './pages/Dashboard'
 import Projects from './pages/Projects'
@@ -120,6 +121,7 @@ ${e.url}`, {
             </button>
           ))}
         </nav>
+        <UpdateNotice />
         <div className="px-3 pb-4">
           <button onClick={() => setGuideOpen(true)} className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-900">
             <Compass className="size-4" />

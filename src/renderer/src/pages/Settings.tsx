@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, Bot, Globe, KeyRound, Save, Timer } from 'lucide-react'
+import { AppWindow, BarChart3, Bot, Globe, KeyRound, RefreshCw, Save, Timer } from 'lucide-react'
 import type { SettingsInput } from '@shared/types'
 import type { PageProps } from '../App'
 import { invoke, useAction, useQuery } from '../lib'
-import { Badge, Button, Card, Field, Input, PageHeader } from '../components/ui'
+import { Badge, Button, Card, Field, Input, PageHeader, Toggle } from '../components/ui'
 import AiSetup from '../components/AiSetup'
+import { useUpdateStatus } from '../components/UpdateNotice'
 
 export default function SettingsPage(_: PageProps) {
   const settings = useQuery('settings:get')
@@ -36,6 +37,19 @@ export default function SettingsPage(_: PageProps) {
   }
 
   const s = settings.data
+  const update = useUpdateStatus()
+  const updateText = !update
+    ? ''
+    : {
+        unsupported: 'Updates are checked only in the installed app.',
+        idle: 'Checks GitHub for a new version at startup and every 6 hours.',
+        checking: 'Checking for updates...',
+        none: 'You have the latest version.',
+        available: `Version ${update.version} is available.`,
+        downloading: `Downloading version ${update.version} (${update.percent ?? 0}%)...`,
+        ready: `Version ${update.version} is ready: restart to install it.`,
+        error: `Update check failed: ${update.message ?? 'unknown error'}`
+      }[update.state]
   return (
     <>
       <PageHeader title="Settings" subtitle="The Save button applies to Browser, Ahrefs and Link monitor. AI writing has its own Save and test." actions={<Button variant="primary" icon={<Save className="size-4" />} loading={busy === 'save'} disabled={!touched.size} onClick={save}>Save</Button>} />
@@ -49,6 +63,45 @@ export default function SettingsPage(_: PageProps) {
             <Field label="Dedicated profile folder" hint={`Separate from your main browser profile, one folder per browser${s?.browserName && s.browserName !== "none" ? ` (now: ${s.browserName})` : ""}. Sign in to each site once here; sessions persist. Switching browser means signing in again.`}>
               <Input value={s?.profileDir ?? ''} readOnly className="bg-gray-50 text-gray-500" />
             </Field>
+          </div>
+        </Card>
+
+        <Card className="p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 font-semibold text-gray-900"><AppWindow className="size-4" />App</div>
+            {update && <Badge tone="gray">v{update.current}</Badge>}
+          </div>
+          <div className="grid gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              {update?.state === 'ready' || update?.state === 'available' ? (
+                <Button variant="primary" icon={<RefreshCw className="size-4" />} onClick={() => void invoke('update:install')}>
+                  {update.state === 'ready' ? 'Restart to update' : 'Download update'}
+                </Button>
+              ) : (
+                <Button
+                  icon={<RefreshCw className="size-4" />}
+                  loading={busy === 'update' || update?.state === 'checking'}
+                  disabled={update?.state === 'unsupported' || update?.state === 'downloading'}
+                  onClick={() => run('update', () => invoke('update:check'))}
+                >
+                  Check for updates
+                </Button>
+              )}
+              <span className="text-sm text-gray-500">{updateText}</span>
+            </div>
+            {s && (
+              <div>
+                <Toggle
+                  checked={s.closeToTray}
+                  label="Keep running in the tray when the window is closed"
+                  onChange={async (v) => {
+                    const r = await run('tray', () => invoke('settings:save', { closeToTray: v }))
+                    if (r) settings.setData(r)
+                  }}
+                />
+                <p className="mt-1 pl-6 text-xs text-gray-500">The link monitor keeps checking in the background. Use Quit in the tray icon menu to exit.</p>
+              </div>
+            )}
           </div>
         </Card>
 

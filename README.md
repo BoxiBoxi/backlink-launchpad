@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">Backlink Launchpad</h1>
-<p align="center"><b>by <a href="https://wriai.com">Wriai</a></b> · plan, write and track launch posts and backlinks on 400+ directories and communities</p>
+<p align="center"><b>by <a href="https://wriai.com">Wriai</a></b> · plan, write and track launch posts and backlinks on 500+ directories and communities</p>
 
 <p align="center">
   <a href="https://github.com/BoxiBoxi/backlink-launchpad/releases/latest"><img src="https://img.shields.io/github/v/release/BoxiBoxi/backlink-launchpad?color=10B981&label=release" alt="Latest release" /></a>
@@ -70,7 +70,12 @@ post value first, and spread posts out over time. Spammy posting gets accounts b
    - Windows SmartScreen: click **More info**, then **Run anyway**.
    - macOS: right-click the app, choose **Open**, then **Open** again.
    - Linux: `chmod +x Backlink-Launchpad-*.AppImage`, then run it.
-3. Install a Chromium browser if you do not have one. **Brave** is recommended; Chrome and Edge work too.
+3. The app uses Brave, Chrome or Microsoft Edge, whichever is installed (Windows always has Edge).
+
+Updates install themselves on Windows and Linux: the app checks GitHub at startup and every 6 hours, downloads a new
+version in the background and offers **Restart to update** (it also installs when you quit). On macOS it tells you a
+new version is out and opens the download page. Closing the window keeps the app running in the tray so the link
+monitor keeps working; use **Quit** in the tray menu to exit (turn this off in Settings).
 
 ## First run
 
@@ -113,8 +118,9 @@ pnpm test              # post URL detection + catalog validation
 pnpm build:win         # or build:mac / build:linux -> installers in release/
 ```
 
-Pushing a tag like `v0.2.0` runs `.github/workflows/release.yml`, which builds all three platforms and attaches them to
-a draft GitHub Release.
+Releasing: bump `version` in `package.json`, then push a tag like `v0.2.0`. `.github/workflows/release.yml` builds all
+three platforms and attaches the installers, `*.blockmap` and `latest*.yml` to a draft GitHub Release. Publishing the
+draft is what ships the update: installed apps (0.1.3 and later) pick it up within 6 hours or at their next start.
 
 ### Environment variables (optional, all can be set in the app instead)
 

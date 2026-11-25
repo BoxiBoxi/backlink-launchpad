@@ -135,6 +135,8 @@ export interface Settings {
   /** Display name of the browser in use ('Brave', 'Chrome', 'Microsoft Edge', ...), or 'none' */
   browserName: string
   profileDir: string
+  /** Closing the window hides the app to the tray instead of quitting */
+  closeToTray: boolean
   linkCheckIntervalHours: number
   aiEndpoint: string
   aiModel: string
@@ -157,6 +159,7 @@ export interface SettingsInput {
   /** Wriai API key (wri_live_...); empty string clears it */
   wriaiApiKey?: string
   bravePath?: string
+  closeToTray?: boolean
   linkCheckIntervalHours?: number
   aiEndpoint?: string
   aiModel?: string
@@ -200,8 +203,18 @@ export interface SessionStatus {
 }
 
 /** Events pushed from the main process to the renderer. */
+export interface UpdateStatus {
+  /** unsupported = dev build (no update feed); available = new version, but it must be downloaded by hand (macOS) */
+  state: 'unsupported' | 'idle' | 'checking' | 'none' | 'available' | 'downloading' | 'ready' | 'error'
+  current: string
+  version?: string
+  percent?: number
+  message?: string
+}
+
 export type AppEvent =
   | { type: 'session'; status: SessionStatus }
+  | { type: 'update'; status: UpdateStatus }
   | { type: 'autoPosted'; taskId: number; linkId: number; siteName: string; url: string }
   | { type: 'drProgress'; done: number; total: number }
 
@@ -258,6 +271,10 @@ export interface Api {
   'settings:get': [[], Settings]
   'settings:save': [[SettingsInput], Settings]
   'ai:test': [[], { ok: boolean; model?: string; message: string; creditsRemaining?: number | null }]
+  'update:status': [[], UpdateStatus]
+  'update:check': [[], UpdateStatus]
+  /** Restart and install a downloaded update (or open the release page when it can only be installed by hand). */
+  'update:install': [[], void]
   'clipboard:write': [[string], void]
   'shell:openExternal': [[string], void]
 }

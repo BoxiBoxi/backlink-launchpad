@@ -1737,7 +1737,7 @@
     "priority": 54,
     "format": "plain",
     "topics": ["ai", "saas", "developer-tools", "launch"],
-    "rules": "Vietnamese product launch board; sign in with Google. Follow the anti-gaming rules in /terms (no vote manipulation).",
+    "rules": "Vietnamese product launch board; sign in with Google. Follow the anti-gaming rules in /terms (no vote manipulation). The same site has a community feed at /community ('Tạo bài viết'; text and links only, AI-moderated, post links dofollow).",
     "needsReview": true
   },
   {
@@ -2190,17 +2190,6 @@
     "format": "plain",
     "topics": ["startup", "indie", "saas", "launch"],
     "rules": "Free indie-maker showcase; log in with an email code and add a logo, one-liner, story and up to 6 screenshots. Reviewed in 1-2 business days; links are ugc. Small, young community."
-  },
-  {
-    "name": "Chợ Dev Community",
-    "url": "https://chodev.pro/community",
-    "submitUrl": "https://chodev.pro/community",
-    "type": "community",
-    "language": "vi",
-    "priority": 50,
-    "format": "plain",
-    "topics": ["programming", "ai", "tech"],
-    "rules": "Free; log in and use 'Tạo bài viết'. Text and links only (no image/video uploads); AI moderation blocks spam and scams. Post links are dofollow."
   },
   {
     "name": "Postmake",
@@ -6573,17 +6562,6 @@
     "maxLength": 600
   },
   {
-    "name": "made_by_vietnamese (GitHub list)",
-    "url": "https://github.com/grokking-vietnam/made_by_vietnamese",
-    "submitUrl": "https://github.com/grokking-vietnam/made_by_vietnamese",
-    "type": "directory",
-    "language": "en",
-    "priority": 26,
-    "format": "markdown",
-    "topics": ["open source"],
-    "rules": "Add via pull request; project must be open source, made or majorly contributed by a Vietnamese developer and active. README links are nofollow."
-  },
-  {
     "name": "Software Bolt",
     "url": "https://softwarebolt.com",
     "submitUrl": "https://softwarebolt.com/submit",
@@ -6680,17 +6658,6 @@
     "topics": ["tech", "students"],
     "rules": "General student forum; register and post in the 'Công nghệ' section. Weak fit, avoid overt promotion.",
     "needsReview": true
-  },
-  {
-    "name": "awesome-vietnamese (GitHub list)",
-    "url": "https://github.com/virusvn/awesome-vietnamese",
-    "submitUrl": "https://github.com/virusvn/awesome-vietnamese",
-    "type": "directory",
-    "language": "vi",
-    "priority": 24,
-    "format": "markdown",
-    "topics": ["open source"],
-    "rules": "Add via pull request; needs over 50% Vietnamese contributors and at least 100 stars+forks combined. README links are nofollow."
   },
   {
     "name": "Mix",

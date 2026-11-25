@@ -68,7 +68,7 @@ export default function SetupGuide({ onClose, onCreateProject }: { onClose: () =
                 </div>
               </div>
               <ul className="grid gap-3 text-sm text-gray-700">
-                <li className="flex gap-3"><Globe className="mt-0.5 size-4 shrink-0 text-gray-400" />A catalog of 400+ directories, launch sites, blogs and communities, scored by priority and Ahrefs DR.</li>
+                <li className="flex gap-3"><Globe className="mt-0.5 size-4 shrink-0 text-gray-400" />A catalog of 500+ directories, launch sites, blogs and communities, scored by priority and Ahrefs DR.</li>
                 <li className="flex gap-3"><Sparkles className="mt-0.5 size-4 shrink-0 text-gray-400" />AI writes a unique, value-first post for each site, in its language and format.</li>
                 <li className="flex gap-3"><Rocket className="mt-0.5 size-4 shrink-0 text-gray-400" />A posting session opens each submit page pre-filled and saves the live URL when you publish.</li>
                 <li className="flex gap-3"><CheckCircle2 className="mt-0.5 size-4 shrink-0 text-gray-400" />The link monitor checks that your links stay live, and whether they are dofollow.</li>

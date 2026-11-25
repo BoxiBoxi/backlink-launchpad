@@ -9,7 +9,7 @@ export type SeedSite = Pick<SiteInput, 'name' | 'url' | 'submitUrl' | 'type' | '
   Partial<Pick<SiteInput, 'needsReview' | 'maxLength' | 'notes' | 'priority'>>
 
 /** Bump when catalog/sites.json gains sites: existing databases get the missing ones (matched by seedKey). */
-export const CATALOG_VERSION = 4
+export const CATALOG_VERSION = 5
 
 export const seedHost = (url: string) => {
   try {

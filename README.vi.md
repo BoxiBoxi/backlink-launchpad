@@ -71,7 +71,12 @@ tiên chia sẻ giá trị, và rải bài ra theo thời gian. Đăng kiểu sp
    - macOS: chuột phải vào app, chọn **Open**, rồi **Open** lần nữa. Nếu macOS báo app bị hỏng ("damaged"), chạy
      `xattr -cr "/Applications/Backlink Launchpad.app"` một lần.
    - Linux: `chmod +x Backlink-Launchpad-*.AppImage` rồi chạy.
-3. Cài một trình duyệt nhân Chromium nếu chưa có. Khuyên dùng **Brave**; Chrome và Edge cũng được.
+3. App dùng Brave, Chrome hoặc Microsoft Edge, cái nào có sẵn thì dùng (Windows luôn có Edge).
+
+Trên Windows và Linux, app tự cập nhật: kiểm tra GitHub khi mở và mỗi 6 giờ, tải bản mới chạy nền rồi hiện nút
+**Restart to update** (thoát app cũng tự cài). Trên macOS app báo có bản mới và mở trang tải. Đóng cửa sổ thì app vẫn
+chạy dưới khay hệ thống (tray) để Link monitor tiếp tục kiểm tra; chọn **Quit** trong menu tray để thoát (tắt được
+trong Settings).
 
 ## Lần chạy đầu tiên
 
@@ -114,8 +119,9 @@ pnpm test              # test nhận link bài + kiểm tra catalog
 pnpm build:win         # hoặc build:mac / build:linux -> bản cài trong release/
 ```
 
-Push một tag như `v0.2.0` sẽ chạy `.github/workflows/release.yml`, build cả 3 hệ điều hành và đính kèm vào một GitHub
-Release nháp. Danh sách biến môi trường xem trong [README tiếng Anh](README.md#environment-variables-optional-all-can-be-set-in-the-app-instead).
+Phát hành: tăng `version` trong `package.json`, rồi push một tag như `v0.2.0`. `.github/workflows/release.yml` sẽ build cả 3
+hệ điều hành và đính kèm bản cài, file `*.blockmap` và `latest*.yml` vào một GitHub Release nháp. Bấm **Publish** bản nháp
+thì bản cập nhật mới được phát hành: app đã cài (từ 0.1.3 trở lên) sẽ nhận trong vòng 6 giờ hoặc ở lần mở tiếp theo. Danh sách biến môi trường xem trong [README tiếng Anh](README.md#environment-variables-optional-all-can-be-set-in-the-app-instead).
 
 ## Đóng góp vào catalog
 

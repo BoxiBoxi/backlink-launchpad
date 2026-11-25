@@ -7,7 +7,9 @@ import { initEvents } from './events'
 import { loadEnv } from './config'
 import { settingsRepo } from './repo'
 import { startLinkScheduler } from './checker'
-import { closePostingBrowser } from './browser'
+import { closePostingBrowser, isPostingBrowserRunning } from './browser'
+import { closeToTrayEnabled, createTray, notifyHiddenOnce, showWindow } from './tray'
+import { checkForUpdates, initUpdater } from './updater'
 import { handleFavicon } from './favicon'
 
 // Pin the data folder (SQLite DB, browser profiles with cookies/logins, media) so it never depends on how Electron
@@ -30,6 +32,20 @@ protocol.registerSchemesAsPrivileged([
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg'])
 
 let mainWindow: BrowserWindow | null = null
+/** Set once a real quit starts (tray Quit, OS shutdown, installing an update), so closing the window is not turned into hiding. */
+let quitting = false
+
+// One running copy only: launching the app again (shortcut, taskbar) brings back the existing window, e.g. from the tray.
+const gotLock = app.requestSingleInstanceLock()
+if (!gotLock) {
+  app.quit()
+} else {
+  app.on('second-instance', () => {
+    console.log('[app] launched again: showing the existing window')
+    if (mainWindow) showWindow(mainWindow)
+    else if (app.isReady()) createWindow()
+  })
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -50,6 +66,13 @@ function createWindow() {
     }
   })
   mainWindow.on('ready-to-show', () => mainWindow?.show())
+  // Closing the window hides it to the tray (unless turned off in Settings); Quit in the tray menu exits.
+  mainWindow.on('close', (e) => {
+    if (quitting || !closeToTrayEnabled()) return
+    e.preventDefault()
+    mainWindow?.hide()
+    notifyHiddenOnce()
+  })
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -73,6 +96,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  if (!gotLock) return
   const envFiles = loadEnv()
   console.log('[env] loaded', envFiles.length ? envFiles : 'no .env file')
   const userData = app.getPath('userData')
@@ -88,12 +112,33 @@ app.whenReady().then(() => {
   registerIpc(() => mainWindow)
   startLinkScheduler(() => Number(settingsRepo.get('linkCheckIntervalHours') || 24))
   createWindow()
+  createTray({
+    getWindow: () => mainWindow,
+    onCheckUpdates: () => {
+      showWindow(mainWindow)
+      void checkForUpdates()
+    }
+  })
+  initUpdater()
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (mainWindow) showWindow(mainWindow)
+    else createWindow()
   })
 })
 
-app.on('window-all-closed', async () => {
-  await closePostingBrowser()
+// Reached only when close-to-tray is off (otherwise the window is hidden, not closed).
+app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
+})
+
+// Close the automated browser / login window before exiting, so the profile is left unlocked and cookies are saved.
+let browserClosed = false
+app.on('before-quit', (e) => {
+  quitting = true
+  if (browserClosed || !isPostingBrowserRunning()) return
+  e.preventDefault()
+  void closePostingBrowser().finally(() => {
+    browserClosed = true
+    app.quit()
+  })
 })
