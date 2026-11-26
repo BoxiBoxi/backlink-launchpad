@@ -100,13 +100,13 @@ export async function generateContent(gateways: AiGateway[], input: GenerateInpu
   const { system, user } = buildPrompts(input)
   type Reply = { title?: string; body?: string; tags?: unknown }
   // Models occasionally ignore the JSON format; one retry fixes it almost always.
-  let res = await chat(gateways, { system, user, json: true, maxTokens: 4000, temperature: 0.8, timeoutMs })
+  let res = await chat(gateways, { system, user, json: true, maxTokens: 8000, temperature: 0.8, timeoutMs })
   let parsed: Reply
   try {
     parsed = parseJsonReply<Reply>(res.content)
     if (!parsed.body || typeof parsed.body !== 'string') throw new Error('AI reply had no body')
   } catch {
-    res = await chat(gateways, { system, user: `${user}\n\nReturn ONLY the JSON object, nothing else.`, json: true, maxTokens: 4000, temperature: 0.7, timeoutMs })
+    res = await chat(gateways, { system, user: `${user}\n\nReturn ONLY the JSON object, nothing else.`, json: true, maxTokens: 8000, temperature: 0.7, timeoutMs })
     parsed = parseJsonReply<Reply>(res.content)
   }
   if (!parsed.body || typeof parsed.body !== 'string') throw new Error('AI reply had no body')

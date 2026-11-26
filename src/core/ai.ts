@@ -185,12 +185,27 @@ export async function chat(gateways: AiGateway[], opts: ChatOptions): Promise<Ch
   throw new Error(`All AI gateways failed:\n${errors.slice(-4).join('\n')}`)
 }
 
-/** Extract a JSON object from a model reply (tolerates ```json fences and leading text). */
+/**
+ * Extract a JSON object from a model reply (tolerates a ```json wrapper and leading text).
+ * The reply itself is tried first: a markdown body often contains ``` code blocks inside the JSON string,
+ * which must not be mistaken for a wrapper.
+ */
 export function parseJsonReply<T>(content: string): T {
-  const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/)
-  const raw = fenced ? fenced[1] : content
-  const start = raw.indexOf('{')
-  const end = raw.lastIndexOf('}')
-  if (start < 0 || end <= start) throw new Error(`AI reply did not contain a JSON object: ${content.trim().slice(0, 160) || '(empty reply)'}`)
-  return JSON.parse(raw.slice(start, end + 1)) as T
+  const text = content.trim()
+  const candidates: string[] = []
+  if (text.startsWith('{')) candidates.push(text)
+  const wrapped = text.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/)
+  if (wrapped) candidates.push(wrapped[1].trim())
+  const start = text.indexOf('{')
+  const end = text.lastIndexOf('}')
+  if (start >= 0 && end > start) candidates.push(text.slice(start, end + 1))
+  for (const c of candidates) {
+    try {
+      return JSON.parse(c) as T
+    } catch {
+      // try the next candidate
+    }
+  }
+  if (start >= 0 && !/}\s*(```)?$/.test(text)) throw new Error('The AI reply was cut off before the end. Try Generate again.')
+  throw new Error(`AI reply did not contain a JSON object: ${text.slice(0, 160) || '(empty reply)'}`)
 }

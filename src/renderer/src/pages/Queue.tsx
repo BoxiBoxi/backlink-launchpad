@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CheckCircle2, Eraser, Globe, ListChecks, Loader2, LogIn, Pencil, Play, Plus, Radar, ScanLine, SkipForward, Sparkles, Square, Trash2, X } from 'lucide-react'
 import type { Content, SessionStatus, Task, TaskStatus } from '@shared/types'
 import type { PageProps } from '../App'
-import { invoke, useAction, useIncremental, useQuery, useRefresh, useToast } from '../lib'
+import { invoke, requestRefresh, useAction, useIncremental, useQuery, useRefresh, useToast } from '../lib'
 import { Badge, Button, Card, Dropdown, Empty, Field, Input, Menu, Modal, PageHeader, Tabs, Toggle } from '../components/ui'
 import { LinkTypeBadge, priorityTone, SiteCell, SiteIcon, typeLabel } from '../components/site'
 import { ContentEditor } from '../components/ContentEditor'
@@ -10,6 +10,23 @@ import { ContentEditor } from '../components/ContentEditor'
 const statusTone = { queued: 'gray', opened: 'blue', posted: 'green', skipped: 'amber' } as const
 const STATUS_ORDER: Record<TaskStatus, number> = { opened: 0, queued: 1, posted: 2, skipped: 3 }
 type View = 'all' | 'todo' | 'posted' | 'skipped'
+
+// Generations in flight, kept outside the page so leaving the tab and coming back still shows the spinner,
+// blocks a second request for the same task, and reloads the list when the post arrives.
+const generating = new Set<number>()
+const genListeners = new Set<() => void>()
+const notifyGen = () => genListeners.forEach((fn) => fn())
+function useGenerating() {
+  const [, bump] = useState(0)
+  useEffect(() => {
+    const fn = () => bump((n) => n + 1)
+    genListeners.add(fn)
+    return () => {
+      genListeners.delete(fn)
+    }
+  }, [])
+  return generating
+}
 
 export default function Queue({ projectId, go }: PageProps) {
   const projects = useQuery('projects:list')
@@ -21,6 +38,7 @@ export default function Queue({ projectId, go }: PageProps) {
   const project = projects.data?.find((p) => p.id === projectId)
   const { busy, run } = useAction()
   const toast = useToast()
+  const pendingGen = useGenerating()
 
   const [adding, setAdding] = useState(false)
   const [picked, setPicked] = useState<number[]>([])
@@ -100,10 +118,20 @@ export default function Queue({ projectId, go }: PageProps) {
   }
 
   const generate = async (t: Task) => {
-    const c = await run(`gen-${t.id}`, () => invoke('content:generate', { projectId, siteId: t.siteId }), (r) => `Generated with ${r.model}${typeof r.creditsRemaining === 'number' ? ` · ${r.creditsRemaining.toLocaleString()} Wriai credits left` : ''}`)
+    if (generating.has(t.id)) return
+    generating.add(t.id)
+    notifyGen()
+    let c: Awaited<ReturnType<typeof invoke<'content:generate'>>> | undefined
+    try {
+      c = await run(`gen-${t.id}`, () => invoke('content:generate', { projectId, siteId: t.siteId }), (r) => `Generated with ${r.model}${typeof r.creditsRemaining === 'number' ? ` · ${r.creditsRemaining.toLocaleString()} Wriai credits left` : ''}`)
+      if (c) await invoke('tasks:update', { id: t.id, contentId: c.id })
+    } finally {
+      generating.delete(t.id)
+      notifyGen()
+    }
     if (c) {
-      await invoke('tasks:update', { id: t.id, contentId: c.id })
-      reloadAll()
+      // This page may have been left and opened again meanwhile: reload whichever copy is on screen.
+      requestRefresh()
       setEditing(c)
     }
   }
@@ -244,7 +272,7 @@ export default function Queue({ projectId, go }: PageProps) {
                         {c ? (
                           <Button size="sm" variant="soft" className="w-28" icon={<Pencil className="size-3.5" />} title={c.title || '(untitled)'} onClick={() => setEditing(c)}>Edit post</Button>
                         ) : (
-                          <Button size="sm" className="w-28" icon={<Sparkles className="size-3.5" />} loading={busy === `gen-${t.id}`} onClick={() => generate(t)}>Generate</Button>
+                          <Button size="sm" className="w-28" icon={<Sparkles className="size-3.5" />} loading={busy === `gen-${t.id}` || pendingGen.has(t.id)} onClick={() => generate(t)}>Generate</Button>
                         )}
                         {t.status !== 'posted' && (
                           <>
