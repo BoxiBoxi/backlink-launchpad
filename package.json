@@ -1,7 +1,7 @@
 {
   "name": "backlink-launchpad",
   "productName": "Backlink Launchpad",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "license": "MIT",
   "description": "Backlink Launchpad by Wriai: plan, write and track launch posts and backlinks on 500+ directories and communities (human-in-the-loop).",
   "private": true,
