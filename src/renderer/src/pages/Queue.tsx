@@ -121,18 +121,20 @@ export default function Queue({ projectId, go }: PageProps) {
     if (generating.has(t.id)) return
     generating.add(t.id)
     notifyGen()
-    let c: Awaited<ReturnType<typeof invoke<'content:generate'>>> | undefined
+    // Not useAction: its single busy slot shows only the latest spinner when several posts are generated at once.
+    const name = siteMap.get(t.siteId)?.name ?? 'site'
     try {
-      c = await run(`gen-${t.id}`, () => invoke('content:generate', { projectId, siteId: t.siteId }), (r) => `Generated with ${r.model}${typeof r.creditsRemaining === 'number' ? ` · ${r.creditsRemaining.toLocaleString()} Wriai credits left` : ''}`)
-      if (c) await invoke('tasks:update', { id: t.id, contentId: c.id })
+      const c = await invoke('content:generate', { projectId, siteId: t.siteId })
+      await invoke('tasks:update', { id: t.id, contentId: c.id })
+      const credits = typeof c.creditsRemaining === 'number' ? ` · ${c.creditsRemaining.toLocaleString()} Wriai credits left` : ''
+      toast('ok', `Post ready for ${name}: click Edit post to review it${credits}`)
+    } catch (e) {
+      toast('error', `${name}: ${e instanceof Error ? e.message : String(e)}`)
     } finally {
       generating.delete(t.id)
       notifyGen()
-    }
-    if (c) {
       // This page may have been left and opened again meanwhile: reload whichever copy is on screen.
       requestRefresh()
-      setEditing(c)
     }
   }
 
@@ -272,7 +274,7 @@ export default function Queue({ projectId, go }: PageProps) {
                         {c ? (
                           <Button size="sm" variant="soft" className="w-28" icon={<Pencil className="size-3.5" />} title={c.title || '(untitled)'} onClick={() => setEditing(c)}>Edit post</Button>
                         ) : (
-                          <Button size="sm" className="w-28" icon={<Sparkles className="size-3.5" />} loading={busy === `gen-${t.id}` || pendingGen.has(t.id)} onClick={() => generate(t)}>Generate</Button>
+                          <Button size="sm" className="w-28" icon={<Sparkles className="size-3.5" />} loading={pendingGen.has(t.id)} onClick={() => generate(t)}>Generate</Button>
                         )}
                         {t.status !== 'posted' && (
                           <>
