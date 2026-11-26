@@ -10,7 +10,7 @@ import { bridgeStatus } from './bridge'
 import { deleteMemory, exportMemory, importMemory, learningEnabled, listMemory, saveMemoryValue, setLearning } from './memory'
 import { exportRecipes, importRecipes, recipeStats } from './recipes'
 import { readFileSync, writeFileSync } from 'node:fs'
-import { autofillEnabled, canStorePasswords, deleteAccount, getProfile, listAccounts, revealPassword, saveProfile, setAutofill } from './accounts'
+import { autofillEnabled, canStorePasswords, deleteAccount, getProfile, defaultPassword, listAccounts, revealPassword, saveProfile, setAutofill, setDefaultPassword } from './accounts'
 import { checkForUpdates, installUpdate, updateStatus } from './updater'
 import { nextInSession, onTaskPostedManually, sessionStatus, startSession, stopSession } from './session'
 import { exportContentPdf } from './pdf'
@@ -151,10 +151,11 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
   handle('browser:close', () => closePostingBrowser())
   handle('browser:status', () => ({ bravePath: getBravePath(), running: isPostingBrowserRunning() }))
   handle('bridge:status', () => bridgeStatus())
-  const identity = () => ({ profile: getProfile(), autofill: autofillEnabled(), canStorePasswords: canStorePasswords() })
+  const identity = () => ({ profile: getProfile(), autofill: autofillEnabled(), canStorePasswords: canStorePasswords(), password: defaultPassword() })
   handle('identity:get', () => identity())
-  handle('identity:save', ({ profile, autofill }) => {
+  handle('identity:save', ({ profile, autofill, password }) => {
     if (profile) saveProfile(profile)
+    if (password !== undefined) setDefaultPassword(password)
     if (autofill !== undefined) setAutofill(autofill)
     return identity()
   })

@@ -11,7 +11,7 @@ import { projectRepo, settingsRepo, siteRepo, taskRepo } from './repo'
 import { setExtensionDir } from './browser'
 import { markPosted, postPayload } from './tasks'
 import { emit } from './events'
-import { accountFor, autofillEnabled, catalogSiteFor, getProfile, signupPasswordFor } from './accounts'
+import { accountFor, autofillEnabled, catalogSiteFor, getProfile, profileLogin, signupPasswordFor } from './accounts'
 import { learn, memoryForExtension } from './memory'
 import { learnRecipe, recipeFor } from './recipes'
 
@@ -204,8 +204,11 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
       if (!site) return send(res, 403, { error: 'Only sites in the catalog get sign-up details' })
       if (mode === 'login') {
         const acc = accountFor(site.host)
-        if (!acc) return send(res, 404, { error: `No saved account for ${site.name}` })
-        return send(res, 200, { login: acc })
+        if (acc) return send(res, 200, { login: acc, saved: true })
+        // No account saved for this site (signed up by hand, or on another computer): use the sign-up profile,
+        // and the user types the password.
+        const login = profileLogin()
+        return send(res, 200, { login, saved: !!login.password })
       }
       const profile = getProfile()
       const { password, saved } = signupPasswordFor(site.host, site.name)

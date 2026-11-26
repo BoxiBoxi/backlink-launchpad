@@ -10,6 +10,7 @@ import { settingsRepo, siteRepo } from './repo'
 const PROFILE_KEY = 'signupProfile'
 const ACCOUNT_PREFIX = 'account:'
 const AUTOFILL_KEY = 'extensionAutofill'
+const DEFAULT_PASSWORD_KEY = 'signupPassword'
 
 const EMPTY_PROFILE: SignupProfile = { firstName: '', lastName: '', username: '', email: '', phone: '' }
 
@@ -96,6 +97,30 @@ function decrypt(b64: string): string {
   }
 }
 
+/**
+ * Optional password the user chose for every site (Sign-up profile). Shown in the app so it is easy to remember,
+ * stored encrypted on disk like the per-site ones. Empty means a strong password is generated for each site.
+ */
+export function hasDefaultPassword(): boolean {
+  return !!settingsRepo.get(DEFAULT_PASSWORD_KEY)
+}
+export function defaultPassword(): string {
+  const raw = settingsRepo.get(DEFAULT_PASSWORD_KEY)
+  return raw ? decrypt(raw) : ''
+}
+export function setDefaultPassword(password: string | null) {
+  if (!password) return void settingsRepo.delete(DEFAULT_PASSWORD_KEY)
+  if (password.length < 6) throw new Error('Use a password of at least 6 characters')
+  if (!canStorePasswords()) throw new Error('This computer has no keychain, so the app cannot store a password safely')
+  settingsRepo.set(DEFAULT_PASSWORD_KEY, safeStorage.encryptString(password).toString('base64'))
+}
+
+/** Sign-in details when no account is saved for the site: the profile, with the default password if one is set. */
+export function profileLogin(): { username: string; email: string; password: string } {
+  const p = getProfile()
+  return { username: p.username, email: p.email, password: defaultPassword() }
+}
+
 /** Strong password with every character class, which satisfies the usual site rules. */
 export function generatePassword(length = 16): string {
   const sets = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnopqrstuvwxyz', '23456789', '!@#$%*-_?']
@@ -124,7 +149,7 @@ export function accountFor(host: string): { username: string; email: string; pas
 export function signupPasswordFor(host: string, siteName: string): { password: string; saved: boolean } {
   const existing = accountFor(host)
   if (existing) return { password: existing.password, saved: true }
-  const password = generatePassword()
+  const password = defaultPassword() || generatePassword()
   if (!canStorePasswords()) return { password, saved: false }
   const profile = getProfile()
   const stored: StoredAccount = {
@@ -144,7 +169,7 @@ export function listAccounts(): SavedAccount[] {
     .map(({ key, value }) => {
       try {
         const a = JSON.parse(value) as StoredAccount
-        return { host: key.slice(ACCOUNT_PREFIX.length), siteName: a.siteName, username: a.username, email: a.email, createdAt: a.createdAt }
+        return { host: key.slice(ACCOUNT_PREFIX.length), siteName: a.siteName, username: a.username, email: a.email, password: decrypt(a.password), createdAt: a.createdAt }
       } catch {
         return null
       }

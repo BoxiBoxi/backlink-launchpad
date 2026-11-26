@@ -220,9 +220,11 @@ function SignupProfileCard() {
   const { busy, run } = useAction()
   const [p, setP] = useState<SignupProfile>({ firstName: '', lastName: '', username: '', email: '', phone: '' })
   const [dirty, setDirty] = useState(false)
+  const [pw, setPw] = useState('')
   useEffect(() => {
     if (identity.data) {
       setP(identity.data.profile)
+      setPw(identity.data.password)
       setDirty(false)
     }
   }, [identity.data])
@@ -231,7 +233,7 @@ function SignupProfileCard() {
     setDirty(true)
   }
   const save = async () => {
-    const r = await run('profile', () => invoke('identity:save', { profile: p }), 'Sign-up profile saved')
+    const r = await run('profile', () => invoke('identity:save', { profile: p, password: pw.trim() }), 'Sign-up profile saved')
     if (r) identity.setData(r)
   }
   const d = identity.data
@@ -242,7 +244,7 @@ function SignupProfileCard() {
         <Button size="sm" variant="primary" icon={<Save className="size-3.5" />} loading={busy === 'profile'} disabled={!dirty} onClick={save}>Save profile</Button>
       </div>
       <p className="mb-4 text-sm text-gray-500">
-        The browser extension fills these into sign-up forms on catalog sites, with a strong password made for each site. Only what you enter here is used.
+        The browser extension fills these into sign-up and sign-in forms on catalog sites, with your password below or, if it is empty, a strong one made for each site. Only what you enter here is used.
         It never ticks terms boxes and never clicks the sign-up button.
       </p>
       <div className="grid grid-cols-2 gap-4">
@@ -251,6 +253,21 @@ function SignupProfileCard() {
         <Field label="Username"><Input value={p.username} onChange={(e) => set('username', e.target.value)} placeholder="annguyen" /></Field>
         <Field label="Email"><Input type="email" value={p.email} onChange={(e) => set('email', e.target.value)} placeholder="you@example.com" /></Field>
         <Field label="Phone (optional)"><Input value={p.phone} onChange={(e) => set('phone', e.target.value)} /></Field>
+        <Field
+          label="Password (optional)"
+          hint="Filled into sign-up and sign-in forms on every site. Leave empty to get a strong, different password for each site (safer, see Saved accounts)."
+        >
+          <Input
+            autoComplete="off"
+            spellCheck={false}
+            className="font-mono"
+            value={pw}
+            onChange={(e) => {
+              setPw(e.target.value)
+              setDirty(true)
+            }}
+          />
+        </Field>
       </div>
       {d && (
         <div className="mt-4">
@@ -277,8 +294,7 @@ function SavedAccountsCard() {
   const accounts = useQuery('accounts:list')
   const { run } = useAction()
   const [copiedHost, setCopiedHost] = useState<string | null>(null)
-  const copyPassword = async (host: string) => {
-    const pw = await run(`pw-${host}`, () => invoke('accounts:reveal', host))
+  const copyPassword = async (host: string, pw: string) => {
     if (!pw) return
     await invoke('clipboard:write', pw)
     setCopiedHost(host)
@@ -304,8 +320,11 @@ function SavedAccountsCard() {
                 <div className="truncate font-medium text-gray-900">{a.siteName}</div>
                 <div className="truncate text-xs text-gray-500">{a.host} · {a.username || a.email || 'no username'}</div>
               </div>
-              <Button size="sm" icon={copiedHost === a.host ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} onClick={() => copyPassword(a.host)}>
-                {copiedHost === a.host ? 'Copied' : 'Copy password'}
+              <code className="max-w-[14rem] truncate rounded-md bg-gray-50 px-2 py-1 font-mono text-xs text-gray-800" title={a.password}>
+                {a.password || 'cannot be read on this computer'}
+              </code>
+              <Button size="sm" icon={copiedHost === a.host ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} disabled={!a.password} onClick={() => copyPassword(a.host, a.password)}>
+                {copiedHost === a.host ? 'Copied' : 'Copy'}
               </Button>
               <Button
                 size="sm"

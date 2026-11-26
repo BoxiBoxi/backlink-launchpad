@@ -241,12 +241,21 @@ export interface FormMemoryEntry {
   updatedAt: string
 }
 
+/** The sign-up profile as the window sees it, with the default password (empty: one is generated per site). */
+export interface Identity {
+  profile: SignupProfile
+  autofill: boolean
+  canStorePasswords: boolean
+  password: string
+}
+
 /** A site account whose password the app generated and keeps (encrypted with the OS keychain). */
 export interface SavedAccount {
   host: string
   siteName: string
   username: string
   email: string
+  password: string
   createdAt: string
 }
 
@@ -301,8 +310,9 @@ export interface Api {
   'browser:status': [[], { bravePath: string | null; running: boolean }]
   /** Local bridge for the browser extension: its port, and when the extension last called it. */
   'bridge:status': [[], { port: number; extensionSeenAt: string | null; extensionDir: string | null }]
-  'identity:get': [[], { profile: SignupProfile; autofill: boolean; canStorePasswords: boolean }]
-  'identity:save': [[{ profile?: SignupProfile; autofill?: boolean }], { profile: SignupProfile; autofill: boolean; canStorePasswords: boolean }]
+  'identity:get': [[], Identity]
+  /** password: the default password; '' or null removes it; undefined keeps it. */
+  'identity:save': [[{ profile?: SignupProfile; autofill?: boolean; password?: string | null }], Identity]
   'accounts:list': [[], SavedAccount[]]
   'memory:list': [[number], FormMemoryEntry[]]
   'memory:save': [[{ projectId: number; key: string; value: string }], void]

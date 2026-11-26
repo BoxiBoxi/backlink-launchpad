@@ -285,7 +285,12 @@
         else if (f.kind === 'email') put(f, email || username, 'email')
         else put(f, username || email, 'username')
       }
-      return { done, note: '' }
+      const note = r.data.saved
+        ? ''
+        : !username && !email
+          ? 'Your sign-up profile is empty: add it in the app, Settings, Sign-up profile.'
+          : 'No password saved for this site: type it yourself.'
+      return { done, note }
     }
     const { profile, password, saved } = r.data
     const vi = (document.documentElement.lang || '').toLowerCase().startsWith('vi')

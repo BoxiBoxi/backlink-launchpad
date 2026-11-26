@@ -40,6 +40,8 @@ export default function Queue({ projectId, go }: PageProps) {
   const { busy, run } = useAction()
   const toast = useToast()
   const pendingGen = useGenerating()
+  // Tasks being opened right now (a second click on Open is ignored). Hooks stay above the early return below.
+  const opening = useRef(new Set<number>())
 
   const [adding, setAdding] = useState(false)
   const [picked, setPicked] = useState<number[]>([])
@@ -112,7 +114,6 @@ export default function Queue({ projectId, go }: PageProps) {
 
   // Opens the submit page in a normal browser window; the Backlink Launchpad extension fills it.
   // No loading state: opening takes a moment and a dimmed button only flickers. A second click is ignored instead.
-  const opening = useRef(new Set<number>())
   const open = async (t: Task) => {
     if (opening.current.has(t.id)) return
     opening.current.add(t.id)
