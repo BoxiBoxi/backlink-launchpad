@@ -97,7 +97,7 @@ export function ahrefsKey(): string {
 
 export function aiTimeoutMs(): number {
   const v = parseInt(process.env.OPENAI_TIMEOUT_MS || '', 10)
-  return Number.isFinite(v) && v > 0 ? v : 120000
+  return Number.isFinite(v) && v > 0 ? v : 240000
 }
 
 export function getSettings(): Settings {

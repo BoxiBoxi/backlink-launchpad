@@ -36,25 +36,26 @@ const TYPE_GUIDE: Record<Site['type'], string> = {
 
 const LANG_NAME: Record<Site['language'], string> = { en: 'English', vi: 'Vietnamese (tiếng Việt, tự nhiên, không dịch máy)' }
 
-function defaultMaxLength(site: Site): number {
-  if (site.maxLength) return site.maxLength
+/** Body length range in characters: long enough for a detailed post, within the site's own limit when it has one. */
+function lengthRange(site: Site): { min: number; max: number } {
+  if (site.maxLength) return { min: Math.round(site.maxLength * 0.6), max: site.maxLength }
   switch (site.type) {
     case 'directory':
-      return 900
+      return { min: 600, max: 1200 }
     case 'qa':
     case 'forum':
-      return 1500
+      return { min: 1500, max: 3000 }
     case 'community':
     case 'launch':
-      return 2000
+      return { min: 2500, max: 5000 }
     default:
-      return 6000
+      return { min: 6000, max: 10000 }
   }
 }
 
 export function buildPrompts(input: GenerateInput): { system: string; user: string } {
   const { project, site, linkUrl, anchor, extra } = input
-  const maxLen = defaultMaxLength(site)
+  const len = lengthRange(site)
   const formatHint =
     site.format === 'markdown'
       ? 'Write the body in Markdown. Put the link as [anchor](url).'
@@ -72,7 +73,7 @@ export function buildPrompts(input: GenerateInput): { system: string; user: stri
     `TARGET SITE: ${site.name} (${site.url})`,
     `Site type: ${site.type}. ${TYPE_GUIDE[site.type]}`,
     `Language: ${LANG_NAME[site.language]}. The whole title and body must be in this language.`,
-    `Maximum body length: about ${maxLen} characters.`,
+    `Body length: ${len.min} to ${len.max} characters. Write in depth: concrete steps, examples and specifics${len.min >= 2500 ? ', with sub-headings or short sections' : ''}. Do not stop before ${len.min} characters.`,
     formatHint,
     site.rules ? `Site link rules / notes: ${site.rules}` : '',
     site.topics.length ? `Site topics: ${site.topics.join(', ')}` : '',
@@ -100,13 +101,13 @@ export async function generateContent(gateways: AiGateway[], input: GenerateInpu
   const { system, user } = buildPrompts(input)
   type Reply = { title?: string; body?: string; tags?: unknown }
   // Models occasionally ignore the JSON format; one retry fixes it almost always.
-  let res = await chat(gateways, { system, user, json: true, maxTokens: 8000, temperature: 0.8, timeoutMs })
+  let res = await chat(gateways, { system, user, json: true, maxTokens: 12000, temperature: 0.8, timeoutMs })
   let parsed: Reply
   try {
     parsed = parseJsonReply<Reply>(res.content)
     if (!parsed.body || typeof parsed.body !== 'string') throw new Error('AI reply had no body')
   } catch {
-    res = await chat(gateways, { system, user: `${user}\n\nReturn ONLY the JSON object, nothing else.`, json: true, maxTokens: 8000, temperature: 0.7, timeoutMs })
+    res = await chat(gateways, { system, user: `${user}\n\nReturn ONLY the JSON object, nothing else.`, json: true, maxTokens: 12000, temperature: 0.7, timeoutMs })
     parsed = parseJsonReply<Reply>(res.content)
   }
   if (!parsed.body || typeof parsed.body !== 'string') throw new Error('AI reply had no body')
