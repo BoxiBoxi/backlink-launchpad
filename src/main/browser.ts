@@ -233,12 +233,19 @@ export function setExtensionDir(dir: string | null) {
  * Open a URL in the normal (not automated) window, closing the automated one first: both use the same
  * profile, and bot checks such as Cloudflare only pass in the normal window.
  */
-export async function openInNormalWindow(browserPath: string, profileDir: string, url: string): Promise<void> {
+export async function openInNormalWindow(browserPath: string, profileDir: string, url: string | null, restart = false): Promise<void> {
   if (postingCtx) {
     const ctx = postingCtx
     postingCtx = null
     await ctx.close().catch(() => undefined)
     await sleep(800)
+  }
+  if (restart) {
+    // The window still runs an older copy of the extension (the app updated meanwhile): close it politely, so
+    // cookies and logins are saved, and open it again with the new copy.
+    await closeProfileBrowsers(profileDir)
+    loginWindowProfile = null
+    await sleep(500)
   }
   await openProfileForLogin(browserPath, profileDir, url)
 }

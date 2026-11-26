@@ -23,6 +23,29 @@ let extensionSeenAt = 0
 /** The task most recently opened from the app: preferred when several tasks fit the page. */
 let handoffTaskId: number | null = null
 let installedDir: string | null = null
+/** Build of the extension copy the app installed at startup, and the one last seen calling from the browser. */
+let installedBuild = ''
+let runningBuild = ''
+
+const OPENED_BUILD_KEY = 'browserExtensionBuild'
+
+/**
+ * True when a browser window on the app's profile may still run an older copy of the extension: the last one
+ * was opened with another build (the app updated, or was stopped without closing it), or an older copy has
+ * called the app since. Then Open closes that window first and opens it again with the new copy (logins are kept).
+ */
+export function extensionNeedsRestart(): boolean {
+  if (!installedBuild) return false
+  const staleWorker = !!runningBuild && runningBuild !== installedBuild
+  return staleWorker || settingsRepo.get(OPENED_BUILD_KEY) !== installedBuild
+}
+
+/** Remember which build the browser window was opened with. */
+export function markBrowserOpened() {
+  if (!installedBuild) return
+  settingsRepo.set(OPENED_BUILD_KEY, installedBuild)
+  runningBuild = ''
+}
 
 let handoffAt = 0
 export function setHandoff(taskId: number) {
@@ -31,7 +54,7 @@ export function setHandoff(taskId: number) {
 }
 
 export function bridgeStatus() {
-  return { port, extensionSeenAt: extensionSeenAt ? new Date(extensionSeenAt).toISOString() : null, extensionDir: installedDir }
+  return { port, extensionSeenAt: extensionSeenAt ? new Date(extensionSeenAt).toISOString() : null, extensionDir: installedDir, installedBuild, runningBuild }
 }
 
 /** Unpacked extension source: shipped next to the app (resources/extension) or the project folder in dev. */
@@ -40,6 +63,26 @@ function extensionSource(): string {
 }
 
 /** Copy the extension into the data folder (writable, stable path = stable extension id) with this run's config. */
+const VERSION_KEY = 'extensionManifest'
+
+function extensionVersion(build: string): string {
+  let prev: { build?: string; version?: string } = {}
+  try {
+    prev = JSON.parse(settingsRepo.get(VERSION_KEY) || '{}')
+  } catch {
+    /* first run */
+  }
+  if (prev.build === build && prev.version) return prev.version
+  const now = new Date()
+  const day = Math.floor((now.getTime() - Date.UTC(2026, 0, 1)) / 86_400_000)
+  const half = Math.floor((now.getUTCHours() * 3600 + now.getUTCMinutes() * 60 + now.getUTCSeconds()) / 2)
+  let version = `2.${day}.${half}`
+  // Never equal to the previous one (two builds within the same two seconds).
+  if (prev.version === version) version = `2.${day}.${half + 1}`
+  settingsRepo.set(VERSION_KEY, JSON.stringify({ build, version }))
+  return version
+}
+
 function installExtension(): string | null {
   const src = extensionSource()
   if (!existsSync(join(src, 'manifest.json'))) {
@@ -56,9 +99,12 @@ function installExtension(): string | null {
     .digest('hex')
     .slice(0, 12)
   for (const f of scripts) writeFileSync(join(dest, f), readFileSync(join(src, f), 'utf8').replaceAll('__BB_BUILD__', build))
-  // A new manifest version makes the browser treat changed files as an update and restart the extension's worker.
+  installedBuild = build
+  // The browser starts the new service worker only if the manifest version goes UP (an equal or lower version keeps
+  // the old worker). So when the files change, the version becomes a later point in time: 2.<day>.<half-second>,
+  // above every 1.x that 0.1.6 used. Unchanged files keep their version.
   const manifest = JSON.parse(readFileSync(join(src, 'manifest.json'), 'utf8'))
-  manifest.version = `1.${parseInt(build.slice(0, 4), 16)}.${parseInt(build.slice(4, 8), 16)}`
+  manifest.version = extensionVersion(build)
   writeFileSync(join(dest, 'manifest.json'), JSON.stringify(manifest, null, 2))
   writeFileSync(join(dest, 'config.json'), JSON.stringify({ port, token }, null, 2))
   return dest
@@ -156,6 +202,8 @@ async function handle(req: IncomingMessage, res: ServerResponse) {
   // Only the extension (or no browser origin at all) may call; ordinary web pages are refused.
   if (origin && !/^(chrome|moz)-extension:\/\//.test(origin)) return send(res, 403, { error: 'forbidden' })
   if (req.headers['x-bb-token'] !== token) return send(res, 401, { error: 'bad token' })
+  const build = req.headers['x-bb-build']
+  if (typeof build === 'string' && build) runningBuild = build
   const url = new URL(req.url || '/', 'http://127.0.0.1')
   try {
     if (req.method === 'GET' && url.pathname === '/v1/hello') {

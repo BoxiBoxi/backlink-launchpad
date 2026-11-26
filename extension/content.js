@@ -712,10 +712,10 @@
     if (a === 'fill') return runFill()
     if (a === 'posted') {
       const url = location.href
-      if (!confirm(`Save this page as the live post for ${current.siteName}?\n\n${url}`)) return
+      // No confirmation: a wrong save can be undone from the notice in the app.
       const r = await send({ type: 'posted', taskId: current.taskId, url })
       if (!r.ok) return status(r.error, true)
-      status('Saved. The link is now tracked in the Link monitor.')
+      status('Saved.')
       setTimeout(() => {
         tasks = tasks.filter((t) => t !== current)
         current = tasks[0] || null

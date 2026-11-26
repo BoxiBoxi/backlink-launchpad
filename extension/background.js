@@ -2,9 +2,10 @@
 // writes when it copies this extension into its data folder. Content scripts cannot reach the app themselves.
 
 // Stamped by the app when it installs the extension. The page script sends its own stamp: if they differ, this
-// service worker is an older copy still running after an update, so it reloads the extension.
+// service worker is an older copy still running after an update. It must not call chrome.runtime.reload(): that
+// removes an extension loaded from the command line. The app restarts the browser on the next Open instead.
 const BUILD = '__BB_BUILD__'
-const UPDATED = 'Backlink Launchpad was just updated. Reload this page (F5) and click again.'
+const UPDATED = 'Backlink Launchpad was updated. Close this browser window, then click Open in the app again.'
 
 let configPromise = null
 function config() {
@@ -23,7 +24,8 @@ async function call(path, init = {}) {
   try {
     res = await fetch(`http://127.0.0.1:${cfg.port}${path}`, {
       ...init,
-      headers: { 'x-bb-token': cfg.token, ...(init.body ? { 'content-type': 'application/json' } : {}), ...(init.headers || {}) }
+      // x-bb-build tells the app which copy of the extension is running, so it can restart an outdated browser.
+      headers: { 'x-bb-token': cfg.token, 'x-bb-build': BUILD, ...(init.body ? { 'content-type': 'application/json' } : {}), ...(init.headers || {}) }
     })
   } catch {
     throw new Error('Backlink Launchpad is not running. Open the app and try again.')
@@ -66,7 +68,7 @@ async function setCodeMirror(tabId, frameId, text) {
 chrome.runtime.onMessage.addListener((msg, sender, reply) => {
   if (msg.build !== BUILD) {
     reply({ ok: false, error: UPDATED })
-    setTimeout(() => chrome.runtime.reload(), 100)
+    void call('/v1/hello').catch(() => undefined) // reports this old build, so the app restarts the browser
     return false
   }
   const run = async () => {

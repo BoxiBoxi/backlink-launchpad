@@ -4,9 +4,9 @@ import { chat } from '@core/ai'
 import { generateContent } from '@core/contentGen'
 import { contentRepo, linkRepo, projectRepo, settingsRepo, siteRepo, taskRepo } from './repo'
 import { aiGateways, aiProvider, aiTimeoutMs, getBravePath, getSettings, profileDir, saveSettings } from './config'
-import { browserName, closePostingBrowser, currentPostingUrl, isPostingBrowserRunning, openProfileForLogin } from './browser'
+import { browserName, closePostingBrowser, currentPostingUrl, isPostingBrowserRunning, openInNormalWindow, openProfileForLogin } from './browser'
 import { markPosted, openTask, openTaskManual, requireBrave, undoPosted } from './tasks'
-import { bridgeStatus } from './bridge'
+import { bridgeStatus, extensionNeedsRestart, markBrowserOpened } from './bridge'
 import { deleteMemory, exportMemory, importMemory, learningEnabled, listMemory, saveMemoryValue, setLearning } from './memory'
 import { exportRecipes, importRecipes, recipeStats } from './recipes'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -147,7 +147,13 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
   handle('links:check', (ids) => checkLinks(ids))
 
   // browser
-  handle('browser:openProfile', (url) => openProfileForLogin(requireBrave(), profileDir(), url))
+  // Login window: as before (a tab in the automated window while a session runs), unless the open browser still has
+  // an older copy of the extension, then it is restarted with the new one.
+  handle('browser:openProfile', async (url) => {
+    if (extensionNeedsRestart()) await openInNormalWindow(requireBrave(), profileDir(), url, true)
+    else await openProfileForLogin(requireBrave(), profileDir(), url)
+    markBrowserOpened()
+  })
   handle('browser:close', () => closePostingBrowser())
   handle('browser:status', () => ({ bravePath: getBravePath(), running: isPostingBrowserRunning() }))
   handle('bridge:status', () => bridgeStatus())

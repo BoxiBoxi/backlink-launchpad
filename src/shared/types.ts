@@ -309,7 +309,7 @@ export interface Api {
   'browser:close': [[], void]
   'browser:status': [[], { bravePath: string | null; running: boolean }]
   /** Local bridge for the browser extension: its port, and when the extension last called it. */
-  'bridge:status': [[], { port: number; extensionSeenAt: string | null; extensionDir: string | null }]
+  'bridge:status': [[], { port: number; extensionSeenAt: string | null; extensionDir: string | null; installedBuild: string; runningBuild: string }]
   'identity:get': [[], Identity]
   /** password: the default password; '' or null removes it; undefined keeps it. */
   'identity:save': [[{ profile?: SignupProfile; autofill?: boolean; password?: string | null }], Identity]

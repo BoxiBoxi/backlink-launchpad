@@ -5,7 +5,7 @@ import type { OpenResult, PlacedLink, Task } from '@shared/types'
 import { contentRepo, linkRepo, projectRepo, siteRepo, taskRepo } from './repo'
 import { getBravePath, profileDir } from './config'
 import { browserName, openForPosting, openInNormalWindow } from './browser'
-import { bridgeStatus, setHandoff } from './bridge'
+import { bridgeStatus, extensionNeedsRestart, markBrowserOpened, setHandoff } from './bridge'
 
 export function requireBrave(): string {
   const p = getBravePath()
@@ -68,7 +68,8 @@ export function postPayload(taskId: number): PostPayload {
 export async function openTaskManual(taskId: number): Promise<{ message: string }> {
   const p = postPayload(taskId)
   if (p.hasContent) clipboard.writeText(p.body)
-  await openInNormalWindow(requireBrave(), profileDir(), p.url)
+  await openInNormalWindow(requireBrave(), profileDir(), p.url, extensionNeedsRestart())
+  markBrowserOpened()
   taskRepo.update({ id: p.task.id, status: p.task.status === 'queued' ? 'opened' : p.task.status })
   setHandoff(p.task.id)
   // No message normally (the page and its panel speak for themselves); only Chrome without the extension needs a hint.
