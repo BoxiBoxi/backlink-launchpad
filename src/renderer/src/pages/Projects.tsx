@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { FolderKanban, ImageIcon, ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Brain, FolderKanban, ImageIcon, ImagePlus, Pencil, Plus, Trash2, X } from 'lucide-react'
 import type { Project, ProjectInput } from '@shared/types'
 import type { PageProps } from '../App'
 import { invoke, localImage, useAction, useQuery } from '../lib'
 import { Badge, Button, Card, Dropdown, Empty, Field, Input, ListInput, Modal, PageHeader, Textarea } from '../components/ui'
+import FormMemoryModal from '../components/FormMemory'
 
 const blank: ProjectInput = {
   name: '',
@@ -21,6 +22,7 @@ const blank: ProjectInput = {
 export default function Projects({ refreshProjects, setProjectId, newProjectRequested, clearNewProjectRequest }: PageProps) {
   const projects = useQuery('projects:list')
   const [editing, setEditing] = useState<(ProjectInput & { id?: number }) | null>(null)
+  const [memoryOf, setMemoryOf] = useState<Project | null>(null)
   const startNew = () => setEditing({ ...blank, targets: [{ url: '', anchors: [] }] })
   useEffect(() => {
     if (newProjectRequested) {
@@ -95,6 +97,7 @@ export default function Projects({ refreshProjects, setProjectId, newProjectRequ
                 </div>
               </div>
               <div className="flex gap-1">
+                <Button size="sm" variant="ghost" icon={<Brain className="size-3.5" />} title="What the browser extension remembered from submit forms" onClick={() => setMemoryOf(p)}>Form memory</Button>
                 <Button size="sm" variant="ghost" icon={<Pencil className="size-3.5" />} onClick={() => setEditing({ ...p })}>Edit</Button>
                 <Button size="sm" variant="ghost" icon={<Trash2 className="size-3.5" />} onClick={() => remove(p)} />
               </div>
@@ -102,6 +105,8 @@ export default function Projects({ refreshProjects, setProjectId, newProjectRequ
           </Card>
         ))}
       </div>
+
+      {memoryOf && <FormMemoryModal project={memoryOf} onClose={() => setMemoryOf(null)} />}
 
       <Modal
         open={!!editing}

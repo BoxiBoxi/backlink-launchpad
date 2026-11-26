@@ -4,7 +4,8 @@ import type { Page } from 'playwright-core'
 import type { OpenResult, PlacedLink, Task } from '@shared/types'
 import { contentRepo, linkRepo, projectRepo, siteRepo, taskRepo } from './repo'
 import { getBravePath, profileDir } from './config'
-import { browserName, openForPosting } from './browser'
+import { browserName, openForPosting, openInNormalWindow } from './browser'
+import { bridgeStatus, setHandoff } from './bridge'
 
 export function requireBrave(): string {
   const p = getBravePath()
@@ -19,26 +20,32 @@ function stripMarkdown(md: string): string {
     .replace(/\*\*([^*]+)\*\*/g, '$1')
 }
 
-/** Open the task's submit page in the browser and pre-fill it. Never submits. */
-export async function openTask(taskId: number): Promise<OpenResult & { page: Page }> {
+/** What gets filled into a task's submit page: shared by the automated browser and the browser extension. */
+export interface PostPayload {
+  task: Task
+  siteName: string
+  siteFormat: string
+  url: string
+  title: string
+  body: string
+  website: string
+  logo: string
+  images: string[]
+  hasContent: boolean
+}
+
+export function postPayload(taskId: number): PostPayload {
   const task = taskRepo.get(taskId)
   if (!task) throw new Error('Task not found')
   const site = siteRepo.get(task.siteId)
   if (!site) throw new Error('Site not found')
   const content = (task.contentId ? contentRepo.get(task.contentId) : undefined) ?? contentRepo.latestFor(task.projectId, task.siteId)
   if (content && task.contentId !== content.id) taskRepo.update({ id: task.id, contentId: content.id })
-
-  let copied = false
-  if (content) {
-    clipboard.writeText(content.body)
-    copied = true
-  }
   const project = projectRepo.get(task.projectId)
-  const { page, ...filled } = await openForPosting({
-    logo: project?.logoPath || '',
-    images: project?.images ?? [],
-    browserPath: requireBrave(),
-    profileDir: profileDir(),
+  return {
+    task,
+    siteName: site.name,
+    siteFormat: site.format,
     url: site.submitUrl || site.url,
     website: content?.linkUrl || project?.targets?.[0]?.url || (project?.domain ? `https://${project.domain}` : ''),
     // No AI content yet: fall back to the brand profile (fits directory/listing forms).
@@ -47,8 +54,50 @@ export async function openTask(taskId: number): Promise<OpenResult & { page: Pag
       ? site.format === 'markdown' || site.format === 'html'
         ? content.body
         : stripMarkdown(content.body)
-      : project?.shortDescription || project?.tagline || ''
+      : project?.shortDescription || project?.tagline || '',
+    logo: project?.logoPath || '',
+    images: project?.images ?? [],
+    hasContent: !!content
+  }
+}
+
+/**
+ * Open the task's submit page in a normal (not automated) browser window, for sites whose bot checks
+ * (Cloudflare and the like) block the automated one. The Backlink Launchpad extension in that window fills the form.
+ */
+export async function openTaskManual(taskId: number): Promise<{ message: string }> {
+  const p = postPayload(taskId)
+  if (p.hasContent) clipboard.writeText(p.body)
+  await openInNormalWindow(requireBrave(), profileDir(), p.url)
+  taskRepo.update({ id: p.task.id, status: p.task.status === 'queued' ? 'opened' : p.task.status })
+  setHandoff(p.task.id)
+  // No message normally (the page and its panel speak for themselves); only Chrome without the extension needs a hint.
+  const chromeSetup = browserName(getBravePath()) === 'Chrome' && !bridgeStatus().extensionSeenAt
+  return {
+    message: chromeSetup ? 'Chrome needs the Backlink Launchpad extension added once: see Settings, Browser extension. Until then, paste the body from your clipboard.' : ''
+  }
+}
+
+/** Open the task's submit page in the browser and pre-fill it. Never submits. */
+export async function openTask(taskId: number): Promise<OpenResult & { page: Page }> {
+  const p = postPayload(taskId)
+  const task = p.task
+  let copied = false
+  if (p.hasContent) {
+    clipboard.writeText(p.body)
+    copied = true
+  }
+  const { page, ...filled } = await openForPosting({
+    logo: p.logo,
+    images: p.images,
+    browserPath: requireBrave(),
+    profileDir: profileDir(),
+    url: p.url,
+    website: p.website,
+    title: p.title,
+    body: p.body
   })
+  setHandoff(task.id)
   taskRepo.update({ id: task.id, status: task.status === 'queued' ? 'opened' : task.status })
   const parts = [
     filled.title ? 'title filled' : 'title not detected',

@@ -11,6 +11,7 @@ import { closePostingBrowser, isPostingBrowserRunning } from './browser'
 import { closeToTrayEnabled, createTray, notifyHiddenOnce, showWindow } from './tray'
 import { checkForUpdates, initUpdater } from './updater'
 import { handleFavicon } from './favicon'
+import { startBridge, stopBridge } from './bridge'
 
 // Pin the data folder (SQLite DB, browser profiles with cookies/logins, media) so it never depends on how Electron
 // was launched:
@@ -110,6 +111,7 @@ app.whenReady().then(() => {
   protocol.handle('bb-favicon', handleFavicon)
   initEvents(() => mainWindow)
   registerIpc(() => mainWindow)
+  void startBridge()
   startLinkScheduler(() => Number(settingsRepo.get('linkCheckIntervalHours') || 24))
   createWindow()
   createTray({
@@ -135,6 +137,7 @@ app.on('window-all-closed', () => {
 let browserClosed = false
 app.on('before-quit', (e) => {
   quitting = true
+  stopBridge()
   if (browserClosed || !isPostingBrowserRunning()) return
   e.preventDefault()
   void closePostingBrowser().finally(() => {

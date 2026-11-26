@@ -1,5 +1,5 @@
 // Data access: maps DB rows <-> shared types.
-import { and, desc, eq, sql } from 'drizzle-orm'
+import { and, desc, eq, sql, like } from 'drizzle-orm'
 import { getDb } from './db'
 import { priorityWithDr } from '@core/ahrefs'
 import { contents, placedLinks, projects, settings, sites, tasks } from './db/schema'
@@ -208,5 +208,8 @@ export const settingsRepo = {
   get: (key: string): string | undefined => getDb().select().from(settings).where(eq(settings.key, key)).get()?.value,
   set: (key: string, value: string) =>
     getDb().insert(settings).values({ key, value }).onConflictDoUpdate({ target: settings.key, set: { value } }).run(),
-  delete: (key: string) => getDb().delete(settings).where(eq(settings.key, key)).run()
+  delete: (key: string) => getDb().delete(settings).where(eq(settings.key, key)).run(),
+  /** All settings whose key starts with this prefix. */
+  list: (prefix: string): { key: string; value: string }[] =>
+    getDb().select().from(settings).where(like(settings.key, `${prefix.replace(/[%_]/g, '')}%`)).all()
 }

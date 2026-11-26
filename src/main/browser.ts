@@ -208,12 +208,39 @@ export async function openProfileForLogin(browserPath: string, profileDir: strin
     return
   }
   mkdirSync(profileDir, { recursive: true })
-  const child = spawn(browserPath, [`--user-data-dir=${profileDir}`, '--no-first-run', '--no-default-browser-check', ...(url ? [url] : [])], {
-    detached: false,
-    stdio: 'ignore'
-  })
+  const ext = extensionDir && existsSync(join(extensionDir, 'manifest.json')) ? extensionDir : null
+  const args = [
+    `--user-data-dir=${profileDir}`,
+    '--no-first-run',
+    '--no-default-browser-check',
+    // The Backlink Launchpad extension fills forms in this window. Brave and Edge load it from the command line;
+    // Chrome 137+ ignores the switch, so there it is added once by hand (Load unpacked) and stays in the profile.
+    ...(ext ? [`--load-extension=${ext}`, '--disable-features=DisableLoadExtensionCommandLineSwitch'] : []),
+    ...(url ? [url] : [])
+  ]
+  const child = spawn(browserPath, args, { detached: false, stdio: 'ignore' })
   child.on('error', () => undefined)
   loginWindowProfile = profileDir
+}
+
+/** Folder of the unpacked browser extension loaded into the login window (set by the bridge at startup). */
+let extensionDir: string | null = null
+export function setExtensionDir(dir: string | null) {
+  extensionDir = dir
+}
+
+/**
+ * Open a URL in the normal (not automated) window, closing the automated one first: both use the same
+ * profile, and bot checks such as Cloudflare only pass in the normal window.
+ */
+export async function openInNormalWindow(browserPath: string, profileDir: string, url: string): Promise<void> {
+  if (postingCtx) {
+    const ctx = postingCtx
+    postingCtx = null
+    await ctx.close().catch(() => undefined)
+    await sleep(800)
+  }
+  await openProfileForLogin(browserPath, profileDir, url)
 }
 
 /** Close both the automated browser and the login window, if open. */

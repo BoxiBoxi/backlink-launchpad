@@ -3,7 +3,7 @@ import { BookOpen, Compass, FolderKanban, LayoutDashboard, Link2, Send, Settings
 import { invoke, requestRefresh, ToastProvider, useQuery, useToast } from './lib'
 import { Dropdown } from './components/ui'
 import SetupGuide from './components/SetupGuide'
-import UpdateNotice from './components/UpdateNotice'
+import UpdateNotice, { useUpdateStatus } from './components/UpdateNotice'
 import { APP_BY, APP_NAME, LogoMark } from './components/Logo'
 import Dashboard from './pages/Dashboard'
 import Projects from './pages/Projects'
@@ -86,6 +86,8 @@ ${e.url}`, {
     clearNewProjectRequest: () => setNewProjectRequested(false)
   }
 
+  const appVersion = useUpdateStatus()?.current
+
   return (
     <div className="flex h-full">
       <aside className="flex w-60 shrink-0 flex-col border-r border-gray-200 bg-white">
@@ -93,9 +95,17 @@ ${e.url}`, {
           <LogoMark className="size-9 shrink-0" />
           <div className="min-w-0">
             <div className="truncate text-sm font-semibold tracking-tight text-gray-900">{APP_NAME}</div>
-            <button className="text-xs text-gray-400 hover:text-emerald-600" onClick={() => invoke('shell:openExternal', 'https://wriai.com/')}>
-              {APP_BY}
-            </button>
+            <div className="flex items-center gap-1.5 text-xs text-gray-400">
+              <button className="hover:text-emerald-600" onClick={() => invoke('shell:openExternal', 'https://wriai.com/')}>
+                {APP_BY}
+              </button>
+              {appVersion && (
+                <>
+                  <span>·</span>
+                  <span title="App version">v{appVersion}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
         <div className="px-3 pb-3">

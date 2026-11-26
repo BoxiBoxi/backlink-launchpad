@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, Eraser, Globe, ListChecks, Loader2, LogIn, Pencil, Play, Plus, Radar, ScanLine, SkipForward, Sparkles, Square, Trash2, X } from 'lucide-react'
 import type { Content, SessionStatus, Task, TaskStatus } from '@shared/types'
 import type { PageProps } from '../App'
@@ -8,7 +8,8 @@ import { LinkTypeBadge, priorityTone, SiteCell, SiteIcon, typeLabel } from '../c
 import { ContentEditor } from '../components/ContentEditor'
 
 const statusTone = { queued: 'gray', opened: 'blue', posted: 'green', skipped: 'amber' } as const
-const STATUS_ORDER: Record<TaskStatus, number> = { opened: 0, queued: 1, posted: 2, skipped: 3 }
+// Queued and opened tasks share one group, so a row does not jump to the top when it is opened.
+const STATUS_ORDER: Record<TaskStatus, number> = { opened: 0, queued: 0, posted: 2, skipped: 3 }
 type View = 'all' | 'todo' | 'posted' | 'skipped'
 
 // Generations in flight, kept outside the page so leaving the tab and coming back still shows the spinner,
@@ -109,11 +110,20 @@ export default function Queue({ projectId, go }: PageProps) {
     (s) => s.status === 'active' && !queuedSiteIds.has(s.id) && (langFilter === 'all' || s.language === (langFilter === 'project' ? project.language : langFilter))
   )
 
+  // Opens the submit page in a normal browser window; the Backlink Launchpad extension fills it.
+  // No loading state: opening takes a moment and a dimmed button only flickers. A second click is ignored instead.
+  const opening = useRef(new Set<number>())
   const open = async (t: Task) => {
-    const r = await run(`open-${t.id}`, () => invoke('tasks:open', t.id))
-    if (r) {
-      toast('info', r.message)
-      reloadAll()
+    if (opening.current.has(t.id)) return
+    opening.current.add(t.id)
+    try {
+      const r = await invoke('tasks:openManual', t.id)
+      if (r.message) toast('info', r.message)
+      if (t.status === 'queued') reloadAll()
+    } catch (e) {
+      toast('error', e instanceof Error ? e.message : String(e))
+    } finally {
+      setTimeout(() => opening.current.delete(t.id), 1500)
     }
   }
 
@@ -278,7 +288,7 @@ export default function Queue({ projectId, go }: PageProps) {
                         )}
                         {t.status !== 'posted' && (
                           <>
-                            <Button size="sm" variant="primary" icon={<Globe className="size-3.5" />} loading={busy === `open-${t.id}`} onClick={() => open(t)}>Open</Button>
+                            <Button size="sm" variant="primary" icon={<Globe className="size-3.5" />} onClick={() => open(t)}>Open</Button>
                             <Button size="sm" variant="ghost" icon={<CheckCircle2 className="size-3.5" />} title="Mark as posted" onClick={() => { setPosting(t); setPostUrl('') }} />
                             <Button size="sm" variant="ghost" icon={<SkipForward className="size-3.5" />} title="Skip" onClick={async () => { await run('skip', () => invoke('tasks:update', { id: t.id, status: 'skipped' })); tasks.reload() }} />
                           </>

@@ -5,7 +5,12 @@ import { generateContent } from '@core/contentGen'
 import { contentRepo, linkRepo, projectRepo, settingsRepo, siteRepo, taskRepo } from './repo'
 import { aiGateways, aiProvider, aiTimeoutMs, getBravePath, getSettings, profileDir, saveSettings } from './config'
 import { browserName, closePostingBrowser, currentPostingUrl, isPostingBrowserRunning, openProfileForLogin } from './browser'
-import { markPosted, openTask, requireBrave, undoPosted } from './tasks'
+import { markPosted, openTask, openTaskManual, requireBrave, undoPosted } from './tasks'
+import { bridgeStatus } from './bridge'
+import { deleteMemory, exportMemory, importMemory, learningEnabled, listMemory, saveMemoryValue, setLearning } from './memory'
+import { exportRecipes, importRecipes, recipeStats } from './recipes'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { autofillEnabled, canStorePasswords, deleteAccount, getProfile, listAccounts, revealPassword, saveProfile, setAutofill } from './accounts'
 import { checkForUpdates, installUpdate, updateStatus } from './updater'
 import { nextInSession, onTaskPostedManually, sessionStatus, startSession, stopSession } from './session'
 import { exportContentPdf } from './pdf'
@@ -116,6 +121,7 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
     const { page: _page, ...result } = await openTask(taskId)
     return result
   })
+  handle('tasks:openManual', (taskId) => openTaskManual(taskId))
   handle('tasks:readCurrentUrl', () => currentPostingUrl())
   handle('tasks:markPosted', ({ taskId, postUrl }) => {
     const res = markPosted(taskId, postUrl)
@@ -144,6 +150,58 @@ export function registerIpc(getWindow: () => BrowserWindow | null) {
   handle('browser:openProfile', (url) => openProfileForLogin(requireBrave(), profileDir(), url))
   handle('browser:close', () => closePostingBrowser())
   handle('browser:status', () => ({ bravePath: getBravePath(), running: isPostingBrowserRunning() }))
+  handle('bridge:status', () => bridgeStatus())
+  const identity = () => ({ profile: getProfile(), autofill: autofillEnabled(), canStorePasswords: canStorePasswords() })
+  handle('identity:get', () => identity())
+  handle('identity:save', ({ profile, autofill }) => {
+    if (profile) saveProfile(profile)
+    if (autofill !== undefined) setAutofill(autofill)
+    return identity()
+  })
+  handle('accounts:list', () => listAccounts())
+  handle('memory:list', (projectId) => listMemory(projectId))
+  handle('memory:save', ({ projectId, key, value }) => saveMemoryValue(projectId, key, value))
+  handle('memory:delete', ({ projectId, key }) => deleteMemory(projectId, key))
+  handle('memory:learning', () => learningEnabled())
+  const saveJson = async (defaultName: string, data: unknown) => {
+    const win = getWindow()
+    const opts = { defaultPath: defaultName, filters: [{ name: 'JSON', extensions: ['json'] }] }
+    const res = win ? await dialog.showSaveDialog(win, opts) : await dialog.showSaveDialog(opts)
+    if (res.canceled || !res.filePath) return null
+    writeFileSync(res.filePath, JSON.stringify(data, null, 2))
+    return res.filePath
+  }
+  const openJson = async (): Promise<unknown | null> => {
+    const win = getWindow()
+    const opts = { properties: ['openFile' as const], filters: [{ name: 'JSON', extensions: ['json'] }] }
+    const res = win ? await dialog.showOpenDialog(win, opts) : await dialog.showOpenDialog(opts)
+    if (res.canceled || !res.filePaths[0]) return null
+    try {
+      return JSON.parse(readFileSync(res.filePaths[0], 'utf8'))
+    } catch {
+      throw new Error('That file is not valid JSON')
+    }
+  }
+  handle('memory:export', (projectId) => {
+    const data = exportMemory(projectId)
+    return saveJson(`form-memory-${data.project.replace(/[^\w-]+/g, '-').toLowerCase()}.json`, data)
+  })
+  handle('memory:import', async (projectId) => {
+    const data = await openJson()
+    return data === null ? null : importMemory(projectId, data)
+  })
+  handle('recipes:stats', () => recipeStats())
+  handle('recipes:export', () => saveJson('form-recipes.json', exportRecipes()))
+  handle('recipes:import', async () => {
+    const data = await openJson()
+    return data === null ? null : importRecipes(data)
+  })
+  handle('memory:setLearning', (on) => {
+    setLearning(on)
+    return learningEnabled()
+  })
+  handle('accounts:reveal', (host) => revealPassword(host))
+  handle('accounts:delete', (host) => deleteAccount(host))
 
   // settings & misc
   handle('setup:status', () => {

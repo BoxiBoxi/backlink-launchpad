@@ -218,6 +218,38 @@ export type AppEvent =
   | { type: 'autoPosted'; taskId: number; linkId: number; siteName: string; url: string }
   | { type: 'drProgress'; done: number; total: number }
 
+/** Details the browser extension fills into sign-up forms. */
+export interface SignupProfile {
+  firstName: string
+  lastName: string
+  username: string
+  email: string
+  phone: string
+}
+
+/** A value the browser extension learned from a submit form, offered on the next sites. */
+export interface FormMemoryEntry {
+  /** What the field means (tagline, pricing, twitter...) or label:<field label> for fields without a known meaning. */
+  key: string
+  /** Readable name of the field. */
+  name: string
+  /** The field's label on the site where it was typed. */
+  label: string
+  value: string
+  /** Host of the site where it was typed. */
+  site: string
+  updatedAt: string
+}
+
+/** A site account whose password the app generated and keeps (encrypted with the OS keychain). */
+export interface SavedAccount {
+  host: string
+  siteName: string
+  username: string
+  email: string
+  createdAt: string
+}
+
 /** Every IPC call the renderer can make: channel -> [args, result]. */
 export interface Api {
   'sites:list': [[], Site[]]
@@ -248,6 +280,8 @@ export interface Api {
   /** Delete the project's tasks with these statuses. Tracked links stay in the Link monitor. Returns the count. */
   'tasks:clear': [[{ projectId: number; statuses: TaskStatus[] }], number]
   'tasks:open': [[number], OpenResult]
+  /** Open the submit page in a normal (not automated) window; the browser extension fills it. */
+  'tasks:openManual': [[number], { message: string }]
   'tasks:readCurrentUrl': [[], string | null]
   'tasks:markPosted': [[{ taskId: number; postUrl: string }], { task: Task; link: PlacedLink }]
   'tasks:undoPosted': [[{ taskId: number; linkId: number }], Task]
@@ -265,6 +299,26 @@ export interface Api {
   'browser:openProfile': [[string | null], void]
   'browser:close': [[], void]
   'browser:status': [[], { bravePath: string | null; running: boolean }]
+  /** Local bridge for the browser extension: its port, and when the extension last called it. */
+  'bridge:status': [[], { port: number; extensionSeenAt: string | null; extensionDir: string | null }]
+  'identity:get': [[], { profile: SignupProfile; autofill: boolean; canStorePasswords: boolean }]
+  'identity:save': [[{ profile?: SignupProfile; autofill?: boolean }], { profile: SignupProfile; autofill: boolean; canStorePasswords: boolean }]
+  'accounts:list': [[], SavedAccount[]]
+  'memory:list': [[number], FormMemoryEntry[]]
+  'memory:save': [[{ projectId: number; key: string; value: string }], void]
+  /** key null: forget everything for the project. */
+  'memory:delete': [[{ projectId: number; key: string | null }], void]
+  'memory:learning': [[], boolean]
+  /** Save the project's remembered values to a JSON file (dialog). Returns the path, or null if cancelled. */
+  'memory:export': [[number], string | null]
+  /** Merge values from a JSON file (dialog) into the project. Returns how many were added, or null if cancelled. */
+  'memory:import': [[number], number | null]
+  'recipes:stats': [[], { sites: number; fields: number; sharedSites: number }]
+  'recipes:export': [[], string | null]
+  'recipes:import': [[], { sites: number; fields: number } | null]
+  'memory:setLearning': [[boolean], boolean]
+  'accounts:reveal': [[string], string]
+  'accounts:delete': [[string], void]
 
   'setup:status': [[], SetupStatus]
   'setup:complete': [[], void]

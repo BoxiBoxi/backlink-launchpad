@@ -97,6 +97,28 @@ A setup guide opens on first launch (reopen it any time from **Setup guide** in 
 Optional: add an Ahrefs API key in Settings to fill the DR column (uses the free DR endpoint, 0 API units).
 Once a site's DR is known, its priority becomes 70% the researched score and 30% DR; a priority you edit by hand is kept.
 
+### Browser extension: filling forms
+
+**Open** in Publish opens the submit page in a normal browser window, so bot checks such as Cloudflare pass. The
+**Backlink Launchpad extension** fills the form there and shows a panel to fill again, copy the title or body, and save the
+live post URL once you have published. You still review and submit yourself.
+Brave and Microsoft Edge load the extension by themselves. Chrome needs it added once (Settings > Browser extension shows how).
+
+The extension also fills **sign-up and sign-in forms** on catalog sites, like a password manager: your details come from
+**Settings > Sign-up profile**, and each site gets its own strong password, kept encrypted with your computer's keychain
+(**Settings > Saved accounts** to copy it later). It never ticks terms boxes and never clicks the sign-up button.
+
+**Form memory:** what you type into a submit form (tagline, pricing, category, social links...) is remembered for the
+project and filled into the same fields on the next sites, even when they are labelled differently. Fields it is not sure
+about are offered as suggestions on the page. Review, edit or forget values in **Projects > Form memory**. Passwords,
+card numbers, codes and API keys are never remembered.
+
+**Form recipes and sharing:** the extension also learns *which field means what* on each site (for example the field
+`#pitch` on betalist.com is the tagline). Recipes hold no personal values, so they are shared:
+[catalog/forms.json](catalog/forms.json) ships with the app, and **Settings > Browser extension > Form recipes > Export**
+gives a file to send to your team or to add to `catalog/forms.json` in a pull request. A project's remembered values can
+be exported and imported too (**Projects > Form memory**), to work on the same launch with a teammate.
+
 ## Your data
 
 Everything stays on your computer:
@@ -167,7 +189,9 @@ After adding sites, bump `CATALOG_VERSION` in `src/core/catalogSeed.ts` so exist
 ```
 catalog/        sites.json (the catalog)
 src/core/       portable logic, no Electron: ai.ts, contentGen.ts, linkAnalysis.ts, postDetect.ts, ahrefs.ts, catalogSeed.ts
-src/main/       Electron main: db/, repo.ts, ipc.ts, browser.ts, session.ts, tasks.ts, checker.ts, drScan.ts, pdf.ts, favicon.ts
+src/main/       Electron main: db/, repo.ts, ipc.ts, browser.ts, session.ts, tasks.ts, checker.ts, drScan.ts, pdf.ts, favicon.ts,
+                bridge.ts (local server for the browser extension)
+extension/      browser extension (Manifest V3) that fills forms in the normal browser window
 src/preload/    typed IPC bridge (window.api)
 src/shared/     types shared by all layers, including the IPC contract
 src/renderer/   React + Tailwind UI

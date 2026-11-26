@@ -15,6 +15,9 @@ asarUnpack:
 extraResources:
   - from: build/icon.png
     to: icon.png
+  # Browser extension loaded into the normal browser window (copied to the data folder at startup).
+  - from: extension
+    to: extension
 npmRebuild: true
 # Update feed for electron-updater: the installed app checks the latest (non-draft) GitHub release for
 # latest.yml / latest-mac.yml / latest-linux.yml. Builds never upload (--publish never); the release workflow

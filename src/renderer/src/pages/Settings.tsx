@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { AppWindow, BarChart3, Bot, Globe, KeyRound, RefreshCw, Save, Timer } from 'lucide-react'
-import type { SettingsInput } from '@shared/types'
+import { AppWindow, BarChart3, Bot, Check, Copy, Download, Globe, KeyRound, Puzzle, RefreshCw, Save, Timer, Trash2, Upload, UserRound } from 'lucide-react'
+import type { SettingsInput, SignupProfile } from '@shared/types'
 import type { PageProps } from '../App'
-import { invoke, useAction, useQuery } from '../lib'
+import { invoke, useAction, useQuery, useToast } from '../lib'
 import { Badge, Button, Card, Field, Input, PageHeader, Toggle } from '../components/ui'
 import AiSetup from '../components/AiSetup'
 import { useUpdateStatus } from '../components/UpdateNotice'
@@ -65,6 +65,10 @@ export default function SettingsPage(_: PageProps) {
             </Field>
           </div>
         </Card>
+
+        <ExtensionCard browserName={s?.browserName ?? 'none'} />
+        <SignupProfileCard />
+        <SavedAccountsCard />
 
         <Card className="p-6">
           <div className="mb-4 flex items-center justify-between">
@@ -135,5 +139,189 @@ export default function SettingsPage(_: PageProps) {
         </Card>
       </div>
     </>
+  )
+}
+
+/** Status of the Backlink Launchpad browser extension, and how to add it where it cannot be loaded automatically (Chrome). */
+function ExtensionCard({ browserName }: { browserName: string }) {
+  const status = useQuery('bridge:status')
+  const recipes = useQuery('recipes:stats')
+  const toast = useToast()
+  const { busy, run } = useAction()
+  const [copied, setCopied] = useState(false)
+  const st = status.data
+  const connected = !!st?.extensionSeenAt
+  const isChrome = browserName === 'Chrome'
+  const copyPath = async () => {
+    if (!st?.extensionDir) return
+    await invoke('clipboard:write', st.extensionDir)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <Card className="p-6">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2 font-semibold text-gray-900"><Puzzle className="size-4" />Browser extension</div>
+        <div className="flex items-center gap-2">
+          <Badge tone={connected ? 'green' : 'gray'}>{connected ? 'connected' : 'not seen yet'}</Badge>
+          <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} title="Refresh" onClick={() => status.reload()} />
+        </div>
+      </div>
+      <p className="text-sm text-gray-500">
+        Open in Publish opens the submit page in a normal browser window, so bot checks such as Cloudflare pass. The Backlink Launchpad panel on the
+        page fills the form, remembers what you type for the next sites, and saves the live post URL. You still review and submit yourself.
+      </p>
+      {connected && <p className="mt-2 text-xs text-gray-400">Last seen {new Date(st!.extensionSeenAt!).toLocaleString()}.</p>}
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <div className="min-w-0 flex-1 text-sm">
+          <div className="font-medium text-gray-900">Form recipes</div>
+          <div className="text-xs text-gray-500">
+            Which field means what on each site, learned as you fill forms: {recipes.data ? `${recipes.data.fields} fields on ${recipes.data.sites} site(s)` : '...'}
+            {recipes.data?.sharedSites ? `, plus ${recipes.data.sharedSites} shared site(s) built in` : ''}. No personal values: safe to share with your team,
+            or to add to catalog/forms.json on GitHub so everyone gets them.
+          </div>
+        </div>
+        <Button size="sm" icon={<Upload className="size-3.5" />} loading={busy === 'rexp'} onClick={async () => {
+          const path = await run('rexp', () => invoke('recipes:export'))
+          if (path) toast('ok', `Saved to ${path}`)
+        }}>Export</Button>
+        <Button size="sm" icon={<Download className="size-3.5" />} loading={busy === 'rimp'} onClick={async () => {
+          const r = await run('rimp', () => invoke('recipes:import'))
+          if (r) {
+            toast('ok', `Imported ${r.fields} field(s) for ${r.sites} site(s)`)
+            recipes.reload()
+          }
+        }}>Import</Button>
+      </div>
+      {isChrome ? (
+        <div className="mt-4 grid gap-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <b>Chrome needs the extension added once</b>
+          <ol className="list-decimal space-y-1 pl-5">
+            <li>Click Login window in Publish to open the app&apos;s Chrome window.</li>
+            <li>Type <code className="rounded bg-white/70 px-1">chrome://extensions</code> in the address bar and turn on Developer mode (top right).</li>
+            <li>Click Load unpacked and choose this folder (Copy path, then paste it in the folder box):</li>
+          </ol>
+          <div className="flex gap-2">
+            <Input value={st?.extensionDir ?? ''} readOnly className="bg-white text-xs" />
+            <Button size="sm" icon={copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} onClick={copyPath} disabled={!st?.extensionDir}>{copied ? 'Copied' : 'Copy path'}</Button>
+          </div>
+          <p className="text-xs text-amber-800/80">It stays in the app&apos;s profile. Brave and Microsoft Edge load it by themselves.</p>
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-gray-400">{browserName === 'none' ? 'Install a browser first.' : `${browserName} loads the extension by itself when the app opens it.`}</p>
+      )}
+    </Card>
+  )
+}
+
+/** Default details the extension fills into sign-up forms, and whether it fills them by itself. */
+function SignupProfileCard() {
+  const identity = useQuery('identity:get')
+  const { busy, run } = useAction()
+  const [p, setP] = useState<SignupProfile>({ firstName: '', lastName: '', username: '', email: '', phone: '' })
+  const [dirty, setDirty] = useState(false)
+  useEffect(() => {
+    if (identity.data) {
+      setP(identity.data.profile)
+      setDirty(false)
+    }
+  }, [identity.data])
+  const set = (k: keyof SignupProfile, v: string) => {
+    setP((x) => ({ ...x, [k]: v }))
+    setDirty(true)
+  }
+  const save = async () => {
+    const r = await run('profile', () => invoke('identity:save', { profile: p }), 'Sign-up profile saved')
+    if (r) identity.setData(r)
+  }
+  const d = identity.data
+  return (
+    <Card className="p-6">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="flex items-center gap-2 font-semibold text-gray-900"><UserRound className="size-4" />Sign-up profile</div>
+        <Button size="sm" variant="primary" icon={<Save className="size-3.5" />} loading={busy === 'profile'} disabled={!dirty} onClick={save}>Save profile</Button>
+      </div>
+      <p className="mb-4 text-sm text-gray-500">
+        The browser extension fills these into sign-up forms on catalog sites, with a strong password made for each site. Only what you enter here is used.
+        It never ticks terms boxes and never clicks the sign-up button.
+      </p>
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="First name (Tên)"><Input value={p.firstName} onChange={(e) => set('firstName', e.target.value)} placeholder="An" /></Field>
+        <Field label="Last name (Họ và chữ đệm)"><Input value={p.lastName} onChange={(e) => set('lastName', e.target.value)} placeholder="Nguyễn Văn" /></Field>
+        <Field label="Username"><Input value={p.username} onChange={(e) => set('username', e.target.value)} placeholder="annguyen" /></Field>
+        <Field label="Email"><Input type="email" value={p.email} onChange={(e) => set('email', e.target.value)} placeholder="you@example.com" /></Field>
+        <Field label="Phone (optional)"><Input value={p.phone} onChange={(e) => set('phone', e.target.value)} /></Field>
+      </div>
+      {d && (
+        <div className="mt-4">
+          <Toggle
+            checked={d.autofill}
+            label="Fill sign-up and sign-in forms as soon as the page opens"
+            onChange={async (v) => {
+              const r = await run('autofill', () => invoke('identity:save', { autofill: v }))
+              if (r) identity.setData(r)
+            }}
+          />
+          <p className="mt-1 pl-6 text-xs text-gray-500">Off: the panel on the page shows a Fill button instead. Full names are written family name first on Vietnamese pages.</p>
+          {!d.canStorePasswords && (
+            <p className="mt-2 text-xs text-amber-700">This computer has no keychain, so passwords are generated but not saved. Copy each one when it is filled.</p>
+          )}
+        </div>
+      )}
+    </Card>
+  )
+}
+
+/** Accounts the extension created passwords for: copy or remove them. */
+function SavedAccountsCard() {
+  const accounts = useQuery('accounts:list')
+  const { run } = useAction()
+  const [copiedHost, setCopiedHost] = useState<string | null>(null)
+  const copyPassword = async (host: string) => {
+    const pw = await run(`pw-${host}`, () => invoke('accounts:reveal', host))
+    if (!pw) return
+    await invoke('clipboard:write', pw)
+    setCopiedHost(host)
+    setTimeout(() => setCopiedHost(null), 2000)
+  }
+  const list = accounts.data ?? []
+  return (
+    <Card className="p-6">
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-2 font-semibold text-gray-900"><KeyRound className="size-4" />Saved accounts</div>
+        <div className="flex items-center gap-2">
+          <Badge tone="gray">{list.length}</Badge>
+          <Button size="sm" variant="ghost" icon={<RefreshCw className="size-3.5" />} title="Refresh" onClick={() => accounts.reload()} />
+        </div>
+      </div>
+      {list.length === 0 ? (
+        <p className="text-sm text-gray-500">None yet. When the extension fills a sign-up form, the site&apos;s password is kept here, encrypted with your computer&apos;s keychain.</p>
+      ) : (
+        <div className="divide-y divide-gray-100 rounded-xl border border-gray-200">
+          {list.map((a) => (
+            <div key={a.host} className="flex items-center gap-3 px-4 py-2.5 text-sm">
+              <div className="min-w-0 flex-1">
+                <div className="truncate font-medium text-gray-900">{a.siteName}</div>
+                <div className="truncate text-xs text-gray-500">{a.host} · {a.username || a.email || 'no username'}</div>
+              </div>
+              <Button size="sm" icon={copiedHost === a.host ? <Check className="size-3.5" /> : <Copy className="size-3.5" />} onClick={() => copyPassword(a.host)}>
+                {copiedHost === a.host ? 'Copied' : 'Copy password'}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                icon={<Trash2 className="size-3.5" />}
+                title="Forget this account"
+                onClick={async () => {
+                  if (!confirm(`Forget the saved password for ${a.siteName}? The account on the site is not affected.`)) return
+                  await run('del', () => invoke('accounts:delete', a.host))
+                  accounts.reload()
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
   )
 }

@@ -98,6 +98,28 @@ Lần đầu mở app sẽ có trình hướng dẫn cài đặt (mở lại b�
 Tùy chọn: thêm Ahrefs API key trong Settings để lấy cột DR (dùng endpoint DR miễn phí, không tốn API unit). Khi đã có DR,
 điểm ưu tiên của site là 70% điểm nghiên cứu và 30% DR; điểm bạn tự sửa thì được giữ nguyên.
 
+### Extension trình duyệt: tự điền form
+
+Nút **Open** trong trang Publish mở trang đăng bài trong cửa sổ trình duyệt bình thường, nên các bước kiểm tra chống bot
+như Cloudflare đều qua. **Extension Backlink Launchpad** tự điền form ở đó và hiện một bảng nhỏ để điền lại, copy tiêu đề
+hoặc nội dung, và lưu link bài sau khi bạn đã đăng. Bạn vẫn tự xem lại và tự bấm submit.
+Brave và Microsoft Edge tự nạp extension. Chrome cần thêm extension một lần (Settings > Browser extension có hướng dẫn).
+
+Extension cũng tự điền **form đăng ký và đăng nhập** trên các site trong catalog, giống trình quản lý mật khẩu: thông tin lấy từ
+**Settings > Sign-up profile**, mỗi site có một mật khẩu mạnh riêng, được mã hoá bằng kho bảo mật của máy
+(**Settings > Saved accounts** để copy lại khi cần). Extension không bao giờ tick ô đồng ý điều khoản và không bấm nút đăng ký.
+
+**Form memory:** những gì bạn gõ vào form submit (tagline, pricing, category, link mạng xã hội...) được ghi nhớ theo project
+và tự điền vào các ô cùng nghĩa ở site tiếp theo, kể cả khi tên ô khác nhau. Ô nào chưa chắc chắn thì hiện thành gợi ý trên
+trang. Xem, sửa hoặc xoá giá trị đã nhớ ở **Projects > Form memory**. Mật khẩu, số thẻ, mã xác nhận và API key không bao giờ
+được ghi nhớ.
+
+**Form recipes và chia sẻ:** extension còn ghi nhớ *ô nào có nghĩa gì* trên từng site (ví dụ ô `#pitch` trên betalist.com
+là tagline). Recipe không chứa dữ liệu cá nhân nên có thể chia sẻ: [catalog/forms.json](catalog/forms.json) đi kèm app, và
+**Settings > Browser extension > Form recipes > Export** tạo file để gửi cho team hoặc đóng góp vào `catalog/forms.json`
+qua pull request. Giá trị đã nhớ của một project cũng export và import được (**Projects > Form memory**), để làm chung một
+đợt launch với đồng đội.
+
 ## Dữ liệu của bạn
 
 Mọi thứ nằm trên máy của bạn:
