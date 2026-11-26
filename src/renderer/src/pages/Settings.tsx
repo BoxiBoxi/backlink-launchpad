@@ -55,6 +55,14 @@ export default function SettingsPage(_: PageProps) {
       <PageHeader title="Settings" subtitle="The Save button applies to Browser, Ahrefs and Link monitor. AI writing has its own Save and test." actions={<Button variant="primary" icon={<Save className="size-4" />} loading={busy === 'save'} disabled={!touched.size} onClick={save}>Save</Button>} />
       <div className="grid gap-4">
         <Card className="p-6">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 font-semibold text-gray-900"><Bot className="size-4" />AI writing</div>
+            {s && <Badge tone={(s.aiProvider === 'wriai' ? s.wriaiKeySet : s.aiApiKeySet) ? 'green' : 'red'}>{s.aiProvider === 'wriai' ? 'Wriai API' : 'OpenAI-compatible'}</Badge>}
+          </div>
+          {s && <AiSetup settings={s} onSaved={settings.setData} />}
+        </Card>
+
+        <Card className="p-6">
           <div className="mb-4 flex items-center gap-2 font-semibold text-gray-900"><Globe className="size-4" />Browser</div>
           <div className="grid gap-4">
             <Field label="Browser path" hint="Leave empty to auto-detect (Brave first, then Chrome, then Edge).">
@@ -107,14 +115,6 @@ export default function SettingsPage(_: PageProps) {
               </div>
             )}
           </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2 font-semibold text-gray-900"><Bot className="size-4" />AI writing</div>
-            {s && <Badge tone={(s.aiProvider === 'wriai' ? s.wriaiKeySet : s.aiApiKeySet) ? 'green' : 'red'}>{s.aiProvider === 'wriai' ? 'Wriai API' : 'OpenAI-compatible'}</Badge>}
-          </div>
-          {s && <AiSetup settings={s} onSaved={settings.setData} />}
         </Card>
 
         <Card className="p-6">
